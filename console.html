@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EV Venture League · Firm Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --graphite:#16191D; --slate:#5B6672; --slate-2:#8A939C;
+  --paper:#EEF1F0; --card:#FFFFFF; --rule:#D8DEDC; --rule-soft:#E9EDEC;
+  --current:#0F6E5C; --current-tint:#DFEEEA; --current-deep:#0A4E42;
+  --charge:#C88A00; --charge-tint:#FAF0DA;
+  --fault:#B4322A; --fault-tint:#F8E6E4;
+  --bench:#2E5D8C; --bench-tint:#E2EAF2;
+  --d:'Archivo',sans-serif; --b:'Public Sans',sans-serif;
+  --s:'Source Serif 4',Georgia,serif; --m:'JetBrains Mono',monospace;
+  --rail:236px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--graphite);font-family:var(--b);font-size:13.5px;line-height:1.5;
+  font-feature-settings:"tnum" 0}
+:focus-visible{outline:2px solid var(--current);outline-offset:2px;border-radius:3px}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:40;background:var(--graphite);color:#fff;
+  display:flex;align-items:stretch;height:54px;border-bottom:1px solid #000}
+.brand{display:flex;align-items:center;gap:11px;padding:0 18px;width:var(--rail);
+  border-right:1px solid #2B3037;flex-shrink:0}
+.mark{width:26px;height:26px;flex-shrink:0}
+.brand-txt .n{font-family:var(--d);font-weight:700;font-size:14px;letter-spacing:-.015em;line-height:1.1}
+.brand-txt .s{font-family:var(--m);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#7E8892}
+.topbar-main{flex:1;display:flex;align-items:center;justify-content:space-between;
+  gap:16px;padding:0 18px;min-width:0}
+.firmline{display:flex;align-items:baseline;gap:10px;min-width:0}
+.firmline .fn{font-family:var(--d);font-weight:600;font-size:15px;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.firmline .fu{font-family:var(--m);font-size:10.5px;color:#7E8892;white-space:nowrap}
+.topmeta{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.qtr{font-family:var(--m);font-size:11px;letter-spacing:.06em;background:#242A31;
+  border:1px solid #363E47;border-radius:5px;padding:5px 11px;white-space:nowrap}
+.qtr b{color:#fff;font-weight:700}
+.clock{font-family:var(--m);font-size:11px;color:var(--charge);white-space:nowrap}
+.clock::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--charge);margin-right:7px;vertical-align:1px;animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.lockbtn{font-family:var(--d);font-weight:600;font-size:12.5px;background:var(--current);
+  color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;transition:background .15s}
+.lockbtn:hover{background:#12836E}
+.lockbtn[disabled]{background:#3A4149;color:#7E8892;cursor:not-allowed}
+
+/* ---------- shell ---------- */
+.shell{display:flex;align-items:flex-start;min-height:calc(100vh - 54px)}
+.rail{width:var(--rail);flex-shrink:0;background:var(--card);border-right:1px solid var(--rule);
+  position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;padding:14px 0 40px}
+.rail-grp{padding:0 14px;margin-bottom:6px}
+.rail-grp-h{font-family:var(--m);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--slate-2);padding:14px 8px 7px}
+.navitem{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;
+  border:none;border-radius:6px;padding:8px 9px;cursor:pointer;font-family:var(--b);font-size:13px;
+  color:var(--graphite);transition:background .12s}
+.navitem:hover{background:var(--paper)}
+.navitem[aria-current="true"]{background:var(--current-tint);color:var(--current-deep);font-weight:600}
+.navitem[aria-current="true"] .seq{background:var(--current);color:#fff;border-color:var(--current)}
+.seq{font-family:var(--m);font-size:9.5px;width:19px;height:19px;flex-shrink:0;
+  display:grid;place-items:center;border:1px solid var(--rule);border-radius:4px;color:var(--slate)}
+.navitem .flag{margin-left:auto;font-family:var(--m);font-size:9px;padding:2px 6px;border-radius:99px}
+.flag.open{background:var(--charge-tint);color:var(--charge)}
+.flag.err{background:var(--fault-tint);color:var(--fault)}
+.flag.done{background:var(--current-tint);color:var(--current-deep)}
+
+.main{flex:1;min-width:0;padding:22px 26px 90px;max-width:1180px}
+.audit{width:270px;flex-shrink:0;position:sticky;top:54px;height:calc(100vh - 54px);
+  overflow-y:auto;padding:22px 20px 60px;border-left:1px solid var(--rule);background:var(--card)}
+@media(max-width:1400px){.audit{display:none}}
+@media(max-width:980px){
+  .rail{position:fixed;left:0;top:54px;transform:translateX(-100%);transition:transform .2s;z-index:35;
+    box-shadow:0 0 0 100vmax rgba(0,0,0,0)}
+  .rail.open{transform:none;box-shadow:2px 0 24px rgba(0,0,0,.18)}
+  .brand{width:auto;border-right:none}
+  .main{padding:18px 16px 80px}
+  .railtoggle{display:grid!important}
+}
+.railtoggle{display:none;place-items:center;width:34px;height:34px;background:#242A31;
+  border:1px solid #363E47;border-radius:6px;color:#fff;cursor:pointer;flex-shrink:0}
+
+/* ---------- page furniture ---------- */
+.pagehead{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:var(--m);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--current)}
+.pagehead h1{font-family:var(--d);font-weight:700;font-size:25px;letter-spacing:-.022em;margin-top:5px}
+.lede{font-family:var(--s);font-size:15px;line-height:1.55;color:var(--slate);max-width:62ch;margin-top:7px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:9px;margin-bottom:16px}
+.card-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:12px 16px;border-bottom:1px solid var(--rule-soft)}
+.card-h h2{font-family:var(--d);font-weight:600;font-size:14.5px;letter-spacing:-.01em}
+.card-h .note{font-family:var(--m);font-size:10.5px;color:var(--slate-2)}
+.card-b{padding:16px}
+.card-b.flush{padding:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+
+/* ---------- instrument cluster (signature) ---------- */
+.cluster{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule-soft)}
+@media(max-width:700px){.cluster{grid-template-columns:repeat(2,1fr)}}
+.gauge{background:var(--card);padding:14px 12px 12px;text-align:center}
+.gauge svg{width:100%;max-width:132px;height:auto;display:block;margin:0 auto}
+.gauge .g-l{font-family:var(--m);font-size:9px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--slate);margin-top:2px;min-height:24px;display:flex;align-items:center;justify-content:center}
+.gauge .g-v{font-family:var(--d);font-weight:700;font-size:21px;letter-spacing:-.02em;line-height:1}
+.gauge .g-t{font-family:var(--m);font-size:9.5px;color:var(--slate-2);margin-top:3px}
+.gauge .g-d{font-family:var(--m);font-size:9.5px;font-weight:500;margin-top:5px}
+.up{color:var(--current)} .down{color:var(--fault)}
+
+/* ---------- KPIs ---------- */
+.kpirow{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule-soft)}
+@media(max-width:760px){.kpirow{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);padding:14px 16px}
+.kpi .k-l{font-family:var(--m);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+.kpi .k-v{font-family:var(--d);font-weight:700;font-size:24px;letter-spacing:-.025em;margin-top:4px;
+  font-variant-numeric:tabular-nums}
+.kpi .k-s{font-family:var(--m);font-size:10.5px;color:var(--slate-2);margin-top:3px}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{font-family:var(--m);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--slate);text-align:right;padding:9px 12px;border-bottom:1px solid var(--rule);
+  background:#FAFBFB;font-weight:500;white-space:nowrap}
+thead th:first-child,tbody td:first-child{text-align:left}
+tbody td{padding:8px 12px;border-bottom:1px solid var(--rule-soft);text-align:right;
+  font-family:var(--m);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody td:first-child{font-family:var(--b);font-weight:500;font-size:12.5px;white-space:normal}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.sub td:first-child{padding-left:26px;font-weight:400;color:var(--slate)}
+tbody tr.rule td{border-top:1px solid var(--graphite);font-weight:700}
+tbody tr.rule td:first-child{font-weight:700}
+tbody tr.hi{background:var(--current-tint)}
+.tscroll{overflow-x:auto}
+.us{color:var(--current-deep);font-weight:700}
+
+/* ---------- forms ---------- */
+.field{margin-bottom:13px}
+label.fl{display:block;font-family:var(--m);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--slate);margin-bottom:5px}
+label.fl .hint{text-transform:none;letter-spacing:0;color:var(--slate-2);font-size:10px;margin-left:6px}
+select,input[type=text],input[type=number],textarea{width:100%;font-family:var(--b);font-size:13px;
+  border:1px solid var(--rule);border-radius:6px;padding:8px 10px;background:#fff;color:var(--graphite)}
+input[type=number]{font-family:var(--m);font-variant-numeric:tabular-nums}
+select:hover,input:hover{border-color:var(--slate-2)}
+input[type=range]{width:100%;accent-color:var(--current)}
+.inline{display:flex;gap:10px;align-items:center}
+.chipset{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--b);font-size:12px;border:1px solid var(--rule);background:#fff;border-radius:99px;
+  padding:6px 13px;cursor:pointer;transition:all .12s;color:var(--slate)}
+.chip:hover{border-color:var(--current)}
+.chip[aria-pressed="true"]{background:var(--current);border-color:var(--current);color:#fff;font-weight:600}
+.chip[disabled]{opacity:.4;cursor:not-allowed}
+.btn{font-family:var(--d);font-weight:600;font-size:12.5px;background:var(--graphite);color:#fff;
+  border:none;border-radius:6px;padding:9px 16px;cursor:pointer;transition:background .15s}
+.btn:hover{background:#000}
+.btn.g{background:#fff;color:var(--graphite);border:1px solid var(--rule)}
+.btn.g:hover{background:var(--paper);border-color:var(--slate-2)}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+
+/* ---------- readout ---------- */
+.readout{background:#FAFBFB;border:1px solid var(--rule-soft);border-radius:8px;padding:13px}
+.rline{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:5px 0;
+  border-bottom:1px dotted var(--rule)}
+.rline:last-child{border-bottom:none}
+.rline .l{font-size:12px;color:var(--slate)}
+.rline .v{font-family:var(--m);font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums}
+.rline.big .v{font-family:var(--d);font-size:16px;font-weight:700}
+
+/* ---------- benefit bars (market research) ---------- */
+.bbar{display:grid;grid-template-columns:150px 1fr 44px;align-items:center;gap:11px;padding:4px 0}
+.bbar .bl{font-size:12.5px}
+.bbar .bt{height:16px;background:var(--paper);border-radius:3px;position:relative;overflow:hidden}
+.bbar .bf{position:absolute;left:0;top:0;bottom:0;border-radius:3px;transition:width .4s}
+.bbar .norm{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--graphite);opacity:.45}
+.bbar .bv{font-family:var(--m);font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- audit rail ---------- */
+.audit h3{font-family:var(--d);font-weight:700;font-size:13px;letter-spacing:-.01em;margin-bottom:3px}
+.audit .sub{font-family:var(--m);font-size:10px;color:var(--slate-2);margin-bottom:14px}
+.chk{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--rule-soft);font-size:12px;line-height:1.4}
+.chk .ic{flex-shrink:0;width:15px;height:15px;border-radius:50%;display:grid;place-items:center;
+  font-size:9px;font-weight:700;color:#fff;margin-top:1px;font-family:var(--m)}
+.chk.ok .ic{background:var(--current)} .chk.warn .ic{background:var(--charge)}
+.chk.err .ic{background:var(--fault)}
+.chk .tx b{display:block;font-family:var(--b);font-weight:600;font-size:12px}
+.chk .tx span{color:var(--slate);font-size:11.5px}
+.spend{margin-top:18px;padding-top:14px;border-top:1px solid var(--rule)}
+
+/* ---------- narrative / briefing ---------- */
+.brief{font-family:var(--s);font-size:15px;line-height:1.62;color:#2A3138;max-width:64ch}
+.brief p+p{margin-top:11px}
+.brief .drop::first-letter{font-family:var(--d);font-weight:700;font-size:44px;float:left;
+  line-height:.82;margin:4px 9px 0 0;color:var(--current)}
+.pull{font-family:var(--s);font-style:italic;font-size:15.5px;color:var(--current-deep);
+  border-left:2px solid var(--current);padding-left:14px;margin:14px 0}
+
+/* ---------- misc ---------- */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule);margin-bottom:16px;overflow-x:auto}
+.tab{font-family:var(--b);font-size:13px;background:none;border:none;border-bottom:2px solid transparent;
+  padding:9px 14px;cursor:pointer;color:var(--slate);white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--graphite);font-weight:600;border-bottom-color:var(--current)}
+.page{display:none} .page.on{display:block}
+.badge{font-family:var(--m);font-size:10px;padding:3px 8px;border-radius:99px}
+.badge.ok{background:var(--current-tint);color:var(--current-deep)}
+.badge.b{background:var(--bench-tint);color:var(--bench)}
+.badge.w{background:var(--charge-tint);color:var(--charge)}
+.sparkwrap{display:flex;align-items:flex-end;gap:3px;height:38px}
+.sparkwrap i{flex:1;background:var(--current);opacity:.28;border-radius:2px 2px 0 0;transition:opacity .15s}
+.sparkwrap i:last-child{opacity:1}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--m);font-size:10px;color:var(--slate)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0}
+.scoot{width:100%;height:auto;display:block}
+.deckgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.deck{border:1px solid var(--rule);border-radius:8px;padding:12px;background:#fff}
+.deck .dn{font-family:var(--d);font-weight:600;font-size:13.5px}
+.deck .dm{font-family:var(--m);font-size:10.5px;color:var(--slate-2);margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <button class="railtoggle" id="railToggle" aria-label="Show sections">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M2 4h12M2 8h12M2 12h12"/></svg>
+    </button>
+    <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <rect x="1" y="1" width="30" height="30" rx="7" stroke="#3A424B" stroke-width="1.5"/>
+      <path d="M17.6 6 9 17.4h5.4L13.4 26 22 14.6h-5.4L17.6 6Z" fill="#0F6E5C"/>
+      <path d="M17.6 6 9 17.4h5.4" stroke="#4FCFAF" stroke-width="1.1" stroke-linejoin="round"/>
+    </svg>
+    <div class="brand-txt">
+      <div class="n">EV Venture League</div>
+      <div class="s">Firm console</div>
+    </div>
+  </div>
+  <div class="topbar-main">
+    <div class="firmline">
+      <span class="fn">Volt Dynamics Pvt Ltd</span>
+      <span class="fu">Universe UNI-7742 · 6 firms</span>
+    </div>
+    <div class="topmeta">
+      <span class="qtr">Quarter <b>4</b> of 8 · decisions open</span>
+      <span class="clock" id="clock">Closes in 41:12</span>
+      <button class="lockbtn" id="lockBtn">Lock in decisions</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="Decision areas">
+    <div class="rail-grp">
+      <div class="rail-grp-h">Direction</div>
+      <button class="navitem" data-p="dash" aria-current="true"><span class="seq">01</span>Command deck</button>
+    </div>
+    <div class="rail-grp">
+      <div class="rail-grp-h">Intelligence</div>
+      <button class="navitem" data-p="research"><span class="seq">02</span>Market research<span class="flag done">read</span></button>
+      <button class="navitem" data-p="compare"><span class="seq">03</span>Benchmark<span class="flag done">read</span></button>
+    </div>
+    <div class="rail-grp">
+      <div class="rail-grp-h">Go to market</div>
+      <button class="navitem" data-p="brand"><span class="seq">04</span>Brand design<span class="flag open">3 open</span></button>
+      <button class="navitem" data-p="ads"><span class="seq">05</span>Advertising<span class="flag open">2 open</span></button>
+      <button class="navitem" data-p="channel"><span class="seq">06</span>Sales channel<span class="flag err">1 fault</span></button>
+    </div>
+    <div class="rail-grp">
+      <div class="rail-grp-h">Operations</div>
+      <button class="navitem" data-p="hr"><span class="seq">07</span>Human resources<span class="flag done">set</span></button>
+      <button class="navitem" data-p="mfg"><span class="seq">08</span>Manufacturing<span class="flag open">1 open</span></button>
+    </div>
+    <div class="rail-grp">
+      <div class="rail-grp-h">Capital</div>
+      <button class="navitem" data-p="fin"><span class="seq">09</span>Finance &amp; pro forma</button>
+      <button class="navitem" data-p="vc"><span class="seq">10</span>Venture round<span class="flag open">Q5</span></button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <!-- 01 COMMAND DECK -->
+    <section class="page on" id="p-dash">
+      <div class="pagehead">
+        <div class="eyebrow">Quarter 4 · Evaluate and revise</div>
+        <h1>Command deck</h1>
+        <p class="lede">Your test market ran for one quarter. Read what the market told you, then decide
+          what to change before capital gets tight in Q5.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Balanced scorecard</h2>
+          <span class="note">Nine measures · cumulative 2.41 · rank 3 of 6</span></div>
+        <div class="card-b flush"><div class="cluster" id="cluster"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Position after Q3 results</h2><span class="note">All figures Rs. lakh</span></div>
+        <div class="card-b flush"><div class="kpirow" id="kpis"></div></div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>Executive briefing</h2><span class="note">From your board</span></div>
+          <div class="card-b">
+            <div class="brief">
+              <p class="drop">Three quarters in, the test market has given you a clear signal and an
+                uncomfortable one. Commuter buyers rated your Surge model 78 out of 100 on brand judgment,
+                the second-best score in the universe. That is the signal.</p>
+              <p>The uncomfortable part is that you served only 71% of the demand you created. Stock-outs
+                cost you roughly 340 units of realised sales and, worse, they cost you the goodwill of buyers
+                who walked into an experience centre and left empty-handed. Your market performance score
+                carries that penalty directly.</p>
+              <p class="pull">Venture capital opens next quarter. What you show them is three quarters
+                of evidence, not a forecast.</p>
+              <p>Two decisions dominate this quarter. First, whether to buy capacity now at Rs. 120 lakh
+                per 500-unit block, ahead of the festive quarter multiplier. Second, whether to hold the
+                Surge price at Rs. 92,000 or take the 4% cut that the price-elasticity estimate says would
+                lift unit demand 11%.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-h"><h2>Cumulative scorecard</h2><span class="note">Q1 to Q3</span></div>
+            <div class="card-b">
+              <div class="sparkwrap" id="spark"></div>
+              <div class="rline" style="margin-top:12px"><span class="l">Quarter score trend</span>
+                <span class="v">0.61 → 0.88 → 0.92</span></div>
+              <div class="rline"><span class="l">Best firm this quarter</span>
+                <span class="v">Ampere Mobility · 1.04</span></div>
+              <div class="rline big"><span class="l">Your cumulative</span><span class="v">2.41</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h2>This quarter's checklist</h2><span class="note">ASCM Q4 sequence</span></div>
+            <div class="card-b" style="padding:6px 16px">
+              <div class="chk ok"><span class="ic">✓</span><span class="tx"><b>Evaluate financial performance</b>
+                <span>Profitability by model reviewed</span></span></div>
+              <div class="chk ok"><span class="ic">✓</span><span class="tx"><b>Evaluate market performance</b>
+                <span>Customer opinion, demand, competitor tactics</span></span></div>
+              <div class="chk warn"><span class="ic">!</span><span class="tx"><b>Revise marketing tactics</b>
+                <span>Prices and ad copy still on Q3 settings</span></span></div>
+              <div class="chk warn"><span class="ic">!</span><span class="tx"><b>Manufacturing plan</b>
+                <span>Capacity block not purchased</span></span></div>
+              <div class="chk err"><span class="ic">✕</span><span class="tx"><b>Compute pro forma cash flow</b>
+                <span>Projected closing cash is negative</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 MARKET RESEARCH -->
+    <section class="page" id="p-research">
+      <div class="pagehead">
+        <div class="eyebrow">Intelligence · Survey wave 3</div>
+        <h1>Market research</h1>
+        <p class="lede">Benefit importance is standardised to a mean of 100 across the whole market.
+          A segment only tells you something useful where it runs well above the norm.</p>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Benefits sought by segment</h2>
+          <div class="chipset" id="segChips"></div></div>
+        <div class="card-b">
+          <div id="benefits"></div>
+          <div class="legend" style="margin-top:14px">
+            <span><i style="background:var(--current)"></i>Well above norm · design to this</span>
+            <span><i style="background:var(--bench)"></i>Above norm</span>
+            <span><i style="background:var(--rule)"></i>Within norm (100–110)</span>
+            <span><i style="background:var(--graphite);width:1px"></i>Norm = 100</span>
+          </div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>Price willing to pay</h2><span class="note">Ideal brand, Rs. '000</span></div>
+          <div class="card-b flush tscroll"><table>
+            <thead><tr><th>Segment</th><th>Low</th><th>Ideal</th><th>High</th><th>Market size /qtr</th></tr></thead>
+            <tbody>
+              <tr class="hi"><td>Urban commuter</td><td>72</td><td>91</td><td>108</td><td>9,400</td></tr>
+              <tr><td>Premium enthusiast</td><td>108</td><td>134</td><td>171</td><td>3,100</td></tr>
+              <tr><td>Value first</td><td>58</td><td>69</td><td>79</td><td>7,800</td></tr>
+              <tr><td>Fleet &amp; delivery</td><td>63</td><td>76</td><td>88</td><td>4,700</td></tr>
+            </tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Survey precision</h2><span class="note">Budget this quarter</span></div>
+          <div class="card-b">
+            <div class="field">
+              <label class="fl">Sample size <span class="hint">larger sample, tighter confidence interval</span></label>
+              <input type="range" id="sample" min="100" max="1200" step="100" value="500">
+            </div>
+            <div class="readout">
+              <div class="rline"><span class="l">End users surveyed</span><span class="v" id="sampN">500</span></div>
+              <div class="rline"><span class="l">Expected error at 95%</span><span class="v" id="sampE">±8%</span></div>
+              <div class="rline"><span class="l">Rank order reliable?</span><span class="v" id="sampR">Mostly</span></div>
+              <div class="rline big"><span class="l">Cost this quarter</span><span class="v" id="sampC">Rs. 6.0 L</span></div>
+            </div>
+            <p style="font-family:var(--s);font-size:13.5px;color:var(--slate);margin-top:12px">
+              At ±15% the rank order of benefits can flip by chance. If two benefits sit within
+              10 points of each other, buy the tighter sample before you commit a design to them.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 BENCHMARK -->
+    <section class="page" id="p-compare">
+      <div class="pagehead">
+        <div class="eyebrow">Intelligence · Observable only</div>
+        <h1>Competitive benchmark</h1>
+        <p class="lede">Everything here is what a rival's product and HR teams could genuinely observe
+          in the market. Costs, cash and profit stay private.</p>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Firms in this universe</h2><span class="note">After Q3 · 6 firms</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Firm</th><th>Primary segment</th><th>Models</th><th>Best brand score</th>
+            <th>Ad score</th><th>Avg price</th><th>Share</th><th>Centres</th><th>Sales staff</th></tr></thead>
+          <tbody>
+            <tr><td>Ampere Mobility</td><td>Premium enthusiast</td><td>2</td><td>84</td><td>71</td><td>1,38,000</td><td>21.4%</td><td>5</td><td>26</td></tr>
+            <tr class="hi"><td class="us">Volt Dynamics (you)</td><td>Urban commuter</td><td>2</td><td>78</td><td>66</td><td>92,000</td><td>19.8%</td><td>4</td><td>22</td></tr>
+            <tr><td>Cirrus Electric</td><td>Value first</td><td>3</td><td>64</td><td>58</td><td>68,500</td><td>18.1%</td><td>6</td><td>31</td></tr>
+            <tr><td>Nirvaha Motors</td><td>Urban commuter</td><td>2</td><td>73</td><td>74</td><td>95,500</td><td>17.2%</td><td>4</td><td>24</td></tr>
+            <tr><td>Torque Labs</td><td>Fleet &amp; delivery</td><td>1</td><td>69</td><td>49</td><td>74,000</td><td>13.6%</td><td>3</td><td>18</td></tr>
+            <tr><td>Sable EV <span class="badge b">bot</span></td><td>Value first</td><td>2</td><td>57</td><td>52</td><td>66,000</td><td>9.9%</td><td>3</td><td>15</td></tr>
+          </tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Compensation packages offered</h2>
+          <span class="note">Reported industry-wide each quarter</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Firm</th><th>Sales salary</th><th>Health</th><th>Vacation</th><th>Pension</th>
+            <th>Sales productivity</th><th>Plant productivity</th></tr></thead>
+          <tbody>
+            <tr><td>Ampere Mobility</td><td>4.8 L</td><td>Full</td><td>18 d</td><td>9%</td><td>94</td><td>91</td></tr>
+            <tr class="hi"><td class="us">Volt Dynamics (you)</td><td>4.2 L</td><td>Full</td><td>14 d</td><td>7%</td><td>86</td><td>88</td></tr>
+            <tr><td>Cirrus Electric</td><td>3.6 L</td><td>Basic</td><td>12 d</td><td>5%</td><td>71</td><td>76</td></tr>
+            <tr><td>Nirvaha Motors</td><td>4.4 L</td><td>Full</td><td>16 d</td><td>8%</td><td>90</td><td>85</td></tr>
+            <tr><td>Torque Labs</td><td>3.9 L</td><td>Basic</td><td>15 d</td><td>6%</td><td>78</td><td>82</td></tr>
+            <tr><td>Sable EV</td><td>3.4 L</td><td>None</td><td>10 d</td><td>4%</td><td>64</td><td>70</td></tr>
+          </tbody></table></div>
+      </div>
+    </section>
+
+    <!-- 04 BRAND DESIGN -->
+    <section class="page" id="p-brand">
+      <div class="pagehead">
+        <div class="eyebrow">Go to market · 2 of 4 model slots used</div>
+        <h1>Brand design</h1>
+        <p class="lede">Match components to the benefits your target segment actually rated highly.
+          Every choice moves unit cost, changeover load and the segment's judgment of the brand.</p>
+      </div>
+      <div class="card">
+        <div class="card-h">
+          <h2 id="mdlName">Surge 110</h2>
+          <div class="chipset">
+            <button class="chip" aria-pressed="true" data-mdl="0">Surge 110</button>
+            <button class="chip" data-mdl="1">Surge Lite</button>
+            <button class="chip" disabled>+ New model (Rs. 85 L R&amp;D)</button>
+          </div>
+        </div>
+        <div class="card-b">
+          <div class="g2">
+            <div>
+              <div class="g2" style="gap:12px">
+                <div class="field"><label class="fl">Powertrain</label>
+                  <select data-cfg="power">
+                    <option>2.2 kW hub motor · economy</option>
+                    <option selected>3.0 kW hub motor · balanced</option>
+                    <option>4.5 kW mid-drive · performance</option>
+                    <option>6.0 kW mid-drive · high performance</option>
+                  </select></div>
+                <div class="field"><label class="fl">Battery pack</label>
+                  <select data-cfg="batt">
+                    <option>2.0 kWh LFP · 75 km</option>
+                    <option selected>3.0 kWh NMC · 110 km</option>
+                    <option>4.0 kWh NMC · 145 km</option>
+                    <option>5.0 kWh NMC fast-charge · 180 km</option>
+                  </select></div>
+                <div class="field"><label class="fl">Braking</label>
+                  <select data-cfg="brake">
+                    <option>Drum / drum</option><option selected>Disc front, drum rear</option>
+                    <option>Disc / disc with CBS</option><option>Disc / disc with ABS</option>
+                  </select></div>
+                <div class="field"><label class="fl">Build &amp; finish</label>
+                  <select data-cfg="build">
+                    <option>Basic steel frame, painted panels</option>
+                    <option selected>Tubular frame, moulded panels</option>
+                    <option>Aluminium frame, premium finish</option>
+                  </select></div>
+                <div class="field"><label class="fl">Wheels</label>
+                  <select data-cfg="wheel">
+                    <option>10" steel</option><option selected>12" alloy</option><option>14" alloy tubeless</option>
+                  </select></div>
+                <div class="field"><label class="fl">Telematics</label>
+                  <select data-cfg="tech">
+                    <option>None</option><option selected>Connected cluster + app</option>
+                    <option>Connected + navigation + OTA</option>
+                  </select></div>
+              </div>
+              <label class="fl" style="margin-top:4px">Add-ons</label>
+              <div class="chipset" style="margin-bottom:14px">
+                <button class="chip" aria-pressed="true">Fast charger</button>
+                <button class="chip" aria-pressed="true">Under-seat storage</button>
+                <button class="chip">Crash guard</button>
+                <button class="chip">Pillion backrest</button>
+                <button class="chip">Extended warranty</button>
+              </div>
+              <div class="field" style="max-width:230px">
+                <label class="fl">Retail price <span class="hint">segment ideal Rs. 91,000</span></label>
+                <input type="number" id="price" value="92000" step="500">
+              </div>
+            </div>
+            <div>
+              <div style="border:1px solid var(--rule-soft);border-radius:8px;padding:10px;background:#FAFBFB;margin-bottom:14px">
+                <svg class="scoot" viewBox="0 0 260 150" id="scoot" aria-label="Model preview"></svg>
+              </div>
+              <div class="readout">
+                <div class="rline"><span class="l">Bill of materials</span><span class="v" id="bom">Rs. 61,400</span></div>
+                <div class="rline"><span class="l">Assembly &amp; overhead</span><span class="v">Rs. 8,200</span></div>
+                <div class="rline"><span class="l">Unit cost</span><span class="v" id="ucost">Rs. 69,600</span></div>
+                <div class="rline"><span class="l">Gross margin</span><span class="v" id="gm">24.3%</span></div>
+                <div class="rline"><span class="l">Changeover load</span><span class="v" id="chg">Moderate</span></div>
+                <div class="rline big"><span class="l">Urban commuter judgment</span><span class="v" id="judg">78 / 100</span></div>
+              </div>
+              <div style="margin-top:14px">
+                <label class="fl">Benefit match-up vs urban commuter</label>
+                <div id="matchup"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 ADVERTISING -->
+    <section class="page" id="p-ads">
+      <div class="pagehead">
+        <div class="eyebrow">Go to market</div>
+        <h1>Advertising</h1>
+        <p class="lede">Ad copy is judged on whether the claims you make match what the segment says it
+          values, and whether your product can actually deliver them. Claiming what you do not have is deceptive.</p>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>Ad copy design</h2><span class="note">Pick up to 3 claims</span></div>
+          <div class="card-b">
+            <div class="field"><label class="fl">Campaign for</label>
+              <select><option selected>Surge 110 · urban commuter</option><option>Surge Lite · value first</option></select></div>
+            <label class="fl">Claims</label>
+            <div class="chipset" id="claims" style="margin-bottom:16px"></div>
+            <div class="readout">
+              <div class="rline"><span class="l">Claim–benefit fit</span><span class="v" id="adFit">Strong</span></div>
+              <div class="rline"><span class="l">Deliverable by product?</span><span class="v" id="adTruth">Yes</span></div>
+              <div class="rline big"><span class="l">Projected ad judgment</span><span class="v" id="adScore">66 / 100</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Media placement</h2><span class="note">Rs. lakh this quarter</span></div>
+          <div class="card-b">
+            <div id="media"></div>
+            <div class="readout" style="margin-top:14px">
+              <div class="rline"><span class="l">Total media spend</span><span class="v" id="mediaTot">Rs. 48.0 L</span></div>
+              <div class="rline"><span class="l">Reach in target segment</span><span class="v" id="mediaReach">61%</span></div>
+              <div class="rline"><span class="l">Effective frequency</span><span class="v" id="mediaFreq">3.2×</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 SALES CHANNEL -->
+    <section class="page" id="p-channel">
+      <div class="pagehead">
+        <div class="eyebrow">Go to market · 1 fault to clear</div>
+        <h1>Sales channel</h1>
+        <p class="lede">Experience centres cost Rs. 40 lakh to open and Rs. 8 lakh a quarter to run.
+          Sales staff carry the segment training that decides whether a walk-in converts.</p>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Experience centres</h2><span class="note">4 open · 2 available</span></div>
+        <div class="card-b">
+          <div class="deckgrid" id="centres"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Sales force</h2><span class="note">22 staff · Rs. 3.5 L each per quarter</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Centre</th><th>Staff</th><th>Segment training</th><th>Q3 walk-ins</th>
+            <th>Conversion</th><th>Units sold</th><th>Per-head yield</th></tr></thead>
+          <tbody>
+            <tr><td>Bengaluru South</td><td>7</td><td>Urban commuter</td><td>2,140</td><td>31%</td><td>663</td><td>95</td></tr>
+            <tr><td>Pune West</td><td>6</td><td>Urban commuter</td><td>1,680</td><td>28%</td><td>470</td><td>78</td></tr>
+            <tr><td>Hyderabad</td><td>5</td><td>Value first</td><td>1,410</td><td>24%</td><td>338</td><td>68</td></tr>
+            <tr class="rule"><td>Chennai OMR</td><td>4</td><td>None assigned</td><td>1,290</td><td>17%</td><td>219</td><td>55</td></tr>
+          </tbody></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Territory development</h2>
+          <span class="note">Market potential from the survey, per quarter</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>City</th><th>Commuter</th><th>Premium</th><th>Value</th><th>Fleet</th>
+            <th>Total potential</th><th>Opening cost</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Bengaluru South</td><td>2,410</td><td>980</td><td>1,120</td><td>860</td><td>5,370</td><td>—</td><td><span class="badge ok">Open Q2</span></td></tr>
+            <tr><td>Pune West</td><td>1,830</td><td>640</td><td>1,240</td><td>710</td><td>4,420</td><td>—</td><td><span class="badge ok">Open Q2</span></td></tr>
+            <tr><td>Hyderabad</td><td>1,640</td><td>520</td><td>1,510</td><td>690</td><td>4,360</td><td>—</td><td><span class="badge ok">Open Q3</span></td></tr>
+            <tr><td>Chennai OMR</td><td>1,490</td><td>410</td><td>1,380</td><td>940</td><td>4,220</td><td>—</td><td><span class="badge ok">Open Q3</span></td></tr>
+            <tr><td>Delhi NCR</td><td>2,180</td><td>1,140</td><td>1,060</td><td>1,220</td><td>5,600</td><td>Rs. 46 L</td><td><span class="badge w">Available</span></td></tr>
+            <tr><td>Ahmedabad</td><td>1,120</td><td>290</td><td>1,340</td><td>580</td><td>3,330</td><td>Rs. 38 L</td><td><span class="badge w">Available</span></td></tr>
+            <tr><td>Kochi</td><td>780</td><td>210</td><td>690</td><td>410</td><td>2,090</td><td>Rs. 34 L</td><td><span class="badge w">Available</span></td></tr>
+          </tbody></table></div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>In-store tactics</h2><span class="note">Applies to every open centre</span></div>
+          <div class="card-b">
+            <div class="field"><label class="fl">Point of purchase display</label>
+              <select id="pop">
+                <option>None</option>
+                <option>Basic shelf card and poster · Rs. 2 L</option>
+                <option selected>Interactive ride-mode kiosk · Rs. 7 L</option>
+                <option>Full experience bay with test ride · Rs. 16 L</option>
+              </select></div>
+            <div class="field"><label class="fl">Sales order priority
+              <span class="hint">who gets served when stock is short</span></label>
+              <select id="prio">
+                <option selected>Highest margin model first</option>
+                <option>Highest volume model first</option>
+                <option>Primary segment first</option>
+                <option>Even split across models</option>
+              </select></div>
+            <div class="field"><label class="fl">Price rebate
+              <span class="hint">paid after the sale, reduces net revenue</span></label>
+              <div class="inline"><input type="number" id="rebate" value="2500" step="500" min="0">
+                <span class="badge b">Rs. per unit</span></div></div>
+            <div class="readout">
+              <div class="rline"><span class="l">Display cost, 4 centres</span><span class="v" id="popCost">Rs. 28 L</span></div>
+              <div class="rline"><span class="l">Conversion lift</span><span class="v" id="popLift">+6.5 pts</span></div>
+              <div class="rline big"><span class="l">Rebate cost at forecast volume</span>
+                <span class="v" id="rebCost">Rs. 57 L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>Web sales centre</h2><span class="note">Optional fifth channel</span></div>
+          <div class="card-b">
+            <div class="field"><label class="fl">Status</label>
+              <select id="webOn"><option>Not opened · Rs. 55 L to open</option>
+                <option selected>Operating since Q3</option></select></div>
+            <div class="g2" style="gap:12px">
+              <div class="field"><label class="fl">Fulfilment staff</label>
+                <input type="number" id="webStaff" value="4" min="0" max="20"></div>
+              <div class="field"><label class="fl">Traffic spend</label>
+                <input type="number" id="webSpend" value="12" min="0" step="2"></div>
+            </div>
+            <label class="fl">Productivity tactics</label>
+            <div class="chipset" id="webTac" style="margin-bottom:14px">
+              <button class="chip" aria-pressed="true">Home test ride booking</button>
+              <button class="chip" aria-pressed="true">Instant finance check</button>
+              <button class="chip">Live configurator</button>
+              <button class="chip">Doorstep delivery</button>
+              <button class="chip">Trade-in valuation</button>
+            </div>
+            <div class="readout">
+              <div class="rline"><span class="l">Quarterly visitors</span><span class="v" id="webVis">18,400</span></div>
+              <div class="rline"><span class="l">Visitor conversion</span><span class="v" id="webConv">2.9%</span></div>
+              <div class="rline"><span class="l">Units through web</span><span class="v" id="webUnits">534</span></div>
+              <div class="rline"><span class="l">Cost per unit sold</span><span class="v" id="webCPU">Rs. 5,240</span></div>
+              <div class="rline big"><span class="l">Customer satisfaction</span><span class="v" id="webSat">71 / 100</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 HR -->
+    <section class="page" id="p-hr">
+      <div class="pagehead">
+        <div class="eyebrow">Operations</div>
+        <h1>Human resources</h1>
+        <p class="lede">Productivity follows the package, and the package is judged relative to what
+          every other firm in the universe is offering this quarter. The industry survey is on the benchmark page.</p>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>Sales force package</h2><span class="note">22 people</span></div>
+          <div class="card-b" id="hrSales"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Plant worker package</h2><span class="note">48 people</span></div>
+          <div class="card-b" id="hrPlant"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 MANUFACTURING -->
+    <section class="page" id="p-mfg">
+      <div class="pagehead">
+        <div class="eyebrow">Operations · Q4 is a festive quarter, demand ×1.25</div>
+        <h1>Manufacturing</h1>
+        <p class="lede">Schedule against forecast demand, not hope. Capacity you schedule and do not use
+          is charged as excess; demand you cannot serve becomes a stock-out penalty on your scorecard.</p>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Capacity and schedule</h2><span class="note">Units per quarter</span></div>
+        <div class="card-b">
+          <div class="g2">
+            <div>
+              <div class="field"><label class="fl">Fixed capacity <span class="hint">block = 500 units, Rs. 120 L</span></label>
+                <div class="inline"><input type="number" id="capBlocks" value="5" min="1" max="14">
+                  <span class="badge b" id="capUnits">2,500 units</span></div></div>
+              <div class="field"><label class="fl">Operating capacity scheduled</label>
+                <input type="range" id="opCap" min="40" max="100" value="88"></div>
+              <div class="field"><label class="fl">Forecast demand, Q4</label>
+                <input type="text" id="fcast" value="2,260 units" readonly
+                  style="font-family:var(--m);background:#FAFBFB;color:var(--slate)"></div>
+              <div class="field"><label class="fl">Quality improvement spend</label>
+                <div class="inline"><input type="number" id="qspend" value="35" min="0" step="5">
+                  <span class="badge w">Rs. lakh</span></div></div>
+            </div>
+            <div>
+              <svg viewBox="0 0 240 130" id="util" aria-label="Utilisation gauge" style="width:100%;max-width:280px;display:block;margin:0 auto"></svg>
+              <div class="readout" style="margin-top:8px">
+                <div class="rline"><span class="l">Scheduled output</span><span class="v" id="mOut">2,200</span></div>
+                <div class="rline"><span class="l">Lost to changeover</span><span class="v" id="mChg">146</span></div>
+                <div class="rline"><span class="l">Excess capacity charge</span><span class="v" id="mExc">Rs. 0 L</span></div>
+                <div class="rline"><span class="l">Projected stock-outs</span><span class="v" id="mSo">206</span></div>
+                <div class="rline big"><span class="l">Reliability judgment</span><span class="v" id="mRel">74 / 100</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Production schedule</h2>
+          <span class="note">Target and replenishment points drive the daily run</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Model</th><th>Forecast demand</th><th>Opening stock</th><th>Target point</th>
+            <th>Replenish at</th><th>Production rule</th><th>Scheduled</th><th>Closing stock</th></tr></thead>
+          <tbody id="schedBody"></tbody></table></div>
+        <div class="card-b" style="border-top:1px solid var(--rule-soft)">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn g sm" id="simBtn">Run production simulation</button>
+            <span class="note" id="simOut" style="font-family:var(--m);font-size:11px;color:var(--slate)">
+              Simulate before you lock. It costs nothing and it is the only way to see the changeover
+              pattern your model mix creates.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>Quality improvement by component</h2>
+            <span class="note">Reliability is the first thing every segment judges</span></div>
+          <div class="card-b flush tscroll"><table>
+            <thead><tr><th>Component</th><th>Failure rate</th><th>Warranty cost /qtr</th>
+              <th>Spend</th><th>Projected rate</th></tr></thead>
+            <tbody id="qualBody"></tbody>
+            <tfoot><tr class="rule"><td>Total</td><td></td><td id="qWar">Rs. 41 L</td>
+              <td id="qSpend">Rs. 35 L</td><td id="qNew">2.1%</td></tr></tfoot></table></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Changeover and plant</h2><span class="note">Rs. lakh</span></div>
+          <div class="card-b">
+            <div class="field"><label class="fl">Changeover R&amp;D this quarter
+              <span class="hint">reduces capacity lost when switching between models</span></label>
+              <div class="inline"><input type="number" id="chgRD" value="0" min="0" step="5">
+                <span class="badge w">Rs. lakh</span></div></div>
+            <div class="field"><label class="fl">Plant location <span class="hint">locked after Q2</span></label>
+              <select disabled><option>Pune · labour index 1.00, distribution 1.00</option></select></div>
+            <div class="readout">
+              <div class="rline"><span class="l">Distinct component sets in mix</span><span class="v">2</span></div>
+              <div class="rline"><span class="l">Changeover efficiency</span><span class="v" id="chgEff">62%</span></div>
+              <div class="rline"><span class="l">Capacity lost to changeover</span><span class="v" id="chgLost">6.6%</span></div>
+              <div class="rline"><span class="l">Cumulative changeover R&amp;D</span><span class="v" id="chgCum">Rs. 0 L</span></div>
+              <div class="rline big"><span class="l">Units recovered next quarter</span><span class="v" id="chgRec">0</span></div>
+            </div>
+            <p style="font-family:var(--s);font-size:13.5px;color:var(--slate);margin-top:12px">
+              Two models sharing a battery and a frame changeover far more cheaply than two models
+              sharing nothing. The cost of variety is paid here, not in the bill of materials.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 FINANCE -->
+    <section class="page" id="p-fin">
+      <div class="pagehead">
+        <div class="eyebrow">Capital · VC round opens Q5</div>
+        <h1>Finance and pro forma</h1>
+        <p class="lede">The pro forma is the same statement the venture capitalists will read next
+          quarter. Negative closing cash is a fatal error and the auditor will block your lock-in.</p>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-ft="pl">Income statement</button>
+        <button class="tab" role="tab" aria-selected="false" data-ft="cf">Pro forma cash flow</button>
+        <button class="tab" role="tab" aria-selected="false" data-ft="bs">Balance sheet</button>
+        <button class="tab" role="tab" aria-selected="false" data-ft="abc">Activity based costing</button>
+        <button class="tab" role="tab" aria-selected="false" data-ft="fund">Funding</button>
+      </div>
+      <div class="card" id="ft-pl">
+        <div class="card-h"><h2>Income statement</h2><span class="note">Rs. lakh · Q3 actual vs Q4 projected</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Line</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4 proj</th></tr></thead>
+          <tbody>
+            <tr><td>Sales revenue</td><td>—</td><td>—</td><td>1,644</td><td>2,081</td></tr>
+            <tr class="sub"><td>Less rebates</td><td>—</td><td>—</td><td>(41)</td><td>(62)</td></tr>
+            <tr><td>Net revenue</td><td>—</td><td>—</td><td>1,603</td><td>2,019</td></tr>
+            <tr><td>Cost of goods sold</td><td>—</td><td>—</td><td>(1,243)</td><td>(1,547)</td></tr>
+            <tr class="rule"><td>Gross profit</td><td>—</td><td>—</td><td>360</td><td>472</td></tr>
+            <tr class="sub"><td>Advertising</td><td>—</td><td>(12)</td><td>(48)</td><td>(56)</td></tr>
+            <tr class="sub"><td>Sales force</td><td>—</td><td>(21)</td><td>(77)</td><td>(84)</td></tr>
+            <tr class="sub"><td>Centre operations</td><td>—</td><td>(16)</td><td>(32)</td><td>(32)</td></tr>
+            <tr class="sub"><td>Market research</td><td>(4)</td><td>(6)</td><td>(6)</td><td>(6)</td></tr>
+            <tr class="sub"><td>Depreciation</td><td>—</td><td>(24)</td><td>(24)</td><td>(29)</td></tr>
+            <tr class="sub"><td>Interest</td><td>—</td><td>—</td><td>(9)</td><td>(14)</td></tr>
+            <tr><td>Total expenses</td><td>(4)</td><td>(79)</td><td>(196)</td><td>(221)</td></tr>
+            <tr class="rule"><td>Operating profit</td><td>(4)</td><td>(79)</td><td>164</td><td>251</td></tr>
+            <tr class="sub"><td>R&amp;D and new centres</td><td>—</td><td>(160)</td><td>(40)</td><td>(85)</td></tr>
+            <tr class="sub"><td>Quality improvement</td><td>—</td><td>—</td><td>(30)</td><td>(35)</td></tr>
+            <tr class="rule"><td>Net profit</td><td>(4)</td><td>(239)</td><td>94</td><td>131</td></tr>
+          </tbody></table></div>
+      </div>
+      <div class="card" id="ft-cf" style="display:none">
+        <div class="card-h"><h2>Pro forma cash flow, Q4</h2><span class="note">Auditor blocks a negative close</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Line</th><th>Rs. lakh</th></tr></thead>
+          <tbody>
+            <tr><td>Opening cash</td><td>182</td></tr>
+            <tr class="sub"><td>Collections from sales</td><td>2,019</td></tr>
+            <tr class="sub"><td>Executive stock issue</td><td>100</td></tr>
+            <tr class="sub"><td>Bank borrowing drawn</td><td>0</td></tr>
+            <tr><td>Total inflow</td><td>2,119</td></tr>
+            <tr class="sub"><td>Materials and production</td><td>(1,547)</td></tr>
+            <tr class="sub"><td>Operating expenses</td><td>(221)</td></tr>
+            <tr class="sub"><td>Capacity purchase, 1 block</td><td>(120)</td></tr>
+            <tr class="sub"><td>R&amp;D and quality</td><td>(120)</td></tr>
+            <tr class="sub"><td>Inventory build</td><td>(310)</td></tr>
+            <tr><td>Total outflow</td><td>(2,318)</td></tr>
+            <tr class="rule"><td>Closing cash</td><td style="color:var(--fault)">(17)</td></tr>
+          </tbody></table></div>
+      </div>
+      <div class="card" id="ft-bs" style="display:none">
+        <div class="card-h"><h2>Balance sheet</h2><span class="note">Rs. lakh · as at end Q3</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Line</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4 proj</th></tr></thead>
+          <tbody>
+            <tr><td>Cash</td><td>96</td><td>41</td><td>182</td><td>103</td></tr>
+            <tr><td>Accounts receivable</td><td>0</td><td>0</td><td>214</td><td>271</td></tr>
+            <tr><td>Finished goods inventory</td><td>0</td><td>128</td><td>296</td><td>412</td></tr>
+            <tr class="rule"><td>Current assets</td><td>96</td><td>169</td><td>692</td><td>786</td></tr>
+            <tr class="sub"><td>Plant and equipment</td><td>0</td><td>600</td><td>600</td><td>720</td></tr>
+            <tr class="sub"><td>Accumulated depreciation</td><td>0</td><td>(24)</td><td>(48)</td><td>(77)</td></tr>
+            <tr><td>Net fixed assets</td><td>0</td><td>576</td><td>552</td><td>643</td></tr>
+            <tr class="rule"><td>Total assets</td><td>96</td><td>745</td><td>1,244</td><td>1,429</td></tr>
+            <tr class="sub"><td>Accounts payable</td><td>0</td><td>0</td><td>131</td><td>164</td></tr>
+            <tr class="sub"><td>Bank line</td><td>0</td><td>90</td><td>180</td><td>246</td></tr>
+            <tr class="sub"><td>Long-term debt</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>Total liabilities</td><td>0</td><td>90</td><td>311</td><td>410</td></tr>
+            <tr class="sub"><td>Common stock</td><td>100</td><td>200</td><td>300</td><td>400</td></tr>
+            <tr class="sub"><td>Retained earnings</td><td>(4)</td><td>(243)</td><td>(149)</td><td>(18)</td></tr>
+            <tr><td>Shareholders equity</td><td>96</td><td>(43)</td><td>151</td><td>382</td></tr>
+            <tr class="rule"><td>Liabilities and equity</td><td>96</td><td>47</td><td>462</td><td>792</td></tr>
+          </tbody></table></div>
+        <div class="card-b" style="border-top:1px solid var(--rule-soft)">
+          <div class="chk warn"><span class="ic">!</span><span class="tx">
+            <b>Total assets exceed liabilities and equity</b>
+            <span>The difference is the emergency loan the engine will draw automatically if cash
+            closes negative. Fix the pro forma and this reconciles.</span></span></div>
+        </div>
+      </div>
+
+      <div class="card" id="ft-abc" style="display:none">
+        <div class="card-h"><h2>Activity based costing</h2>
+          <span class="note">Where the money actually went, Q3</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Cost object</th><th>Units</th><th>Net revenue</th><th>Direct cost</th>
+            <th>Allocated marketing</th><th>Allocated channel</th><th>Contribution</th><th>Margin</th></tr></thead>
+          <tbody>
+            <tr><td>Surge 110</td><td>1,204</td><td>1,092</td><td>(838)</td><td>(34)</td><td>(88)</td><td>132</td><td class="up">12.1%</td></tr>
+            <tr><td>Surge Lite</td><td>486</td><td>511</td><td>(405)</td><td>(14)</td><td>(53)</td><td>39</td><td class="up">7.6%</td></tr>
+            <tr class="rule"><td>By model</td><td>1,690</td><td>1,603</td><td>(1,243)</td><td>(48)</td><td>(141)</td><td>171</td><td>10.7%</td></tr>
+            <tr><td>Bengaluru South</td><td>663</td><td>629</td><td>(487)</td><td>(19)</td><td>(41)</td><td>82</td><td class="up">13.0%</td></tr>
+            <tr><td>Pune West</td><td>470</td><td>446</td><td>(345)</td><td>(13)</td><td>(38)</td><td>50</td><td class="up">11.2%</td></tr>
+            <tr><td>Hyderabad</td><td>338</td><td>313</td><td>(249)</td><td>(9)</td><td>(35)</td><td>20</td><td class="up">6.4%</td></tr>
+            <tr><td>Chennai OMR</td><td>219</td><td>215</td><td>(162)</td><td>(7)</td><td>(33)</td><td>13</td><td class="down">6.0%</td></tr>
+            <tr class="rule"><td>By centre</td><td>1,690</td><td>1,603</td><td>(1,243)</td><td>(48)</td><td>(147)</td><td>165</td><td>10.3%</td></tr>
+          </tbody></table></div>
+        <div class="card-b" style="border-top:1px solid var(--rule-soft)">
+          <div class="chk warn"><span class="ic">!</span><span class="tx">
+            <b>Chennai OMR barely covers its own cost</b>
+            <span>It carries the full Rs. 8 L quarterly running cost against 219 units. Either train
+            its staff to a segment or accept that it is a share-of-voice decision, not a profit one.</span></span></div>
+        </div>
+      </div>
+
+      <div class="card" id="ft-fund" style="display:none">
+        <div class="card-h"><h2>Funding sources</h2><span class="note">Limits move with equity</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Source</th><th>Drawn</th><th>Limit</th><th>Rate</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td>Executive stock</td><td>400</td><td>400</td><td>—</td><td>Rs. 100 L per quarter, Q1–Q4</td></tr>
+            <tr><td>Venture capital</td><td>0</td><td>500</td><td>—</td><td>Opens Q5, needs business plan</td></tr>
+            <tr><td>Bank line</td><td>180</td><td>246</td><td>11%</td><td>1.5× equity less long-term debt</td></tr>
+            <tr><td>Long-term debt</td><td>0</td><td>328</td><td>13%</td><td>2× equity less total debt</td></tr>
+            <tr><td>Emergency loan</td><td>0</td><td>Unlimited</td><td>36%</td><td>Auto-drawn if cash goes negative</td></tr>
+          </tbody></table></div>
+      </div>
+    </section>
+    <!-- 10 VENTURE ROUND -->
+    <section class="page" id="p-vc">
+      <div class="pagehead">
+        <div class="eyebrow">Capital · Round opens at the Q5 deadline</div>
+        <h1>Venture round</h1>
+        <p class="lede">Three partners read the same two-year business plan. They are not scoring your
+          ambition, they are scoring whether three quarters of trading evidence make the plan credible.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Business plan</h2><span class="note" id="bpNote">4 of 6 sections complete</span></div>
+        <div class="card-b" style="padding:6px 16px 14px">
+          <div id="bpList"></div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>Your ask</h2><span class="note">Rs. lakh</span></div>
+          <div class="card-b">
+            <div class="field"><label class="fl">Capital requested
+              <span class="hint">up to Rs. 500 L available this round</span></label>
+              <input type="range" id="vcAmt" min="50" max="500" step="10" value="320"></div>
+            <div class="field"><label class="fl">Shares offered
+              <span class="hint">4,00,000 currently held by the executive team</span></label>
+              <input type="range" id="vcShares" min="50000" max="600000" step="10000" value="220000"></div>
+            <div class="readout">
+              <div class="rline"><span class="l">Capital requested</span><span class="v" id="vcAmtV">Rs. 320 L</span></div>
+              <div class="rline"><span class="l">Shares offered</span><span class="v" id="vcShV">2,20,000</span></div>
+              <div class="rline"><span class="l">Implied share price</span><span class="v" id="vcPrice">Rs. 145.45</span></div>
+              <div class="rline"><span class="l">Pre-money valuation</span><span class="v" id="vcPre">Rs. 582 L</span></div>
+              <div class="rline"><span class="l">Post-money valuation</span><span class="v" id="vcPost">Rs. 902 L</span></div>
+              <div class="rline big"><span class="l">Your team retains</span><span class="v" id="vcRetain">64.5%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>Partner assessment</h2><span class="note">Live, updates as you change the ask</span></div>
+          <div class="card-b">
+            <div id="vcPanel"></div>
+            <div class="readout" style="margin-top:14px">
+              <div class="rline"><span class="l">Evidence base</span><span class="v">3 quarters trading</span></div>
+              <div class="rline"><span class="l">Independent valuation</span><span class="v" id="vcFair">Rs. 618 L</span></div>
+              <div class="rline big"><span class="l">Verdict</span><span class="v" id="vcVerdict">Negotiating</span></div>
+            </div>
+            <div id="vcTerm" style="margin-top:14px"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <aside class="audit" aria-label="Final check">
+    <h3>Final check</h3>
+    <div class="sub">Live auditor · Q4</div>
+    <div id="auditList"></div>
+    <div class="spend">
+      <div class="rline"><span class="l">Committed this quarter</span><span class="v">Rs. 2,318 L</span></div>
+      <div class="rline"><span class="l">Cash available</span><span class="v">Rs. 2,301 L</span></div>
+      <div class="rline big"><span class="l">Shortfall</span><span class="v" style="color:var(--fault)">Rs. 17 L</span></div>
+      <button class="btn g sm" style="width:100%;margin-top:12px">Recompute pro forma</button>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const C={cur:'#0F6E5C',bench:'#2E5D8C',charge:'#C88A00',fault:'#B4322A',rule:'#D8DEDC',ink:'#16191D'};
+
+/* ---------- navigation ---------- */
+$$('.navitem').forEach(b=>b.addEventListener('click',()=>{
+  $$('.navitem').forEach(x=>x.setAttribute('aria-current','false'));
+  b.setAttribute('aria-current','true');
+  $$('.page').forEach(p=>p.classList.remove('on'));
+  $('#p-'+b.dataset.p).classList.add('on');
+  $('#rail').classList.remove('open'); window.scrollTo({top:0});
+}));
+$('#railToggle').addEventListener('click',()=>$('#rail').classList.toggle('open'));
+
+/* ---------- countdown ---------- */
+let secs=41*60+12;
+setInterval(()=>{if(secs<=0)return;secs--;const m=String(Math.floor(secs/60)).padStart(2,'0'),
+  s=String(secs%60).padStart(2,'0');$('#clock').textContent=`Closes in ${m}:${s}`;},1000);
+
+/* ---------- signature: balanced scorecard instrument cluster ---------- */
+const BSC=[
+ {k:'Financial performance',v:0.94,max:2,good:1.0,d:+0.31,note:'good > 1.00'},
+ {k:'Financial risk',v:0.83,max:1,good:0.80,d:-0.04,note:'good > 0.80'},
+ {k:'Market performance',v:0.31,max:1,good:0.40,d:+0.06,note:'good > 0.40 at 6 firms'},
+ {k:'Marketing effectiveness',v:0.72,max:1,good:0.80,d:+0.09,note:'good > 0.80'},
+ {k:'Investment in future',v:3.42,max:6,good:3.0,d:+0.44,note:'good > 3.0'},
+ {k:'Wealth',v:0.78,max:2,good:1.0,d:+0.22,note:'good > 1.00'},
+ {k:'Asset management',v:1.91,max:4,good:3.0,d:-0.12,note:'good ≈ 3.0'},
+ {k:'Human resources',v:0.87,max:1,good:0.80,d:+0.03,note:'good > 0.80'},
+ {k:'Manufacturing productivity',v:0.66,max:1,good:0.80,d:-0.08,note:'good > 0.80'}
+];
+const R=38,CX=50,CY=50,LEN=Math.PI*R;
+const arc=(f)=>{const a=Math.PI*(1-f);return `${CX+R*Math.cos(Math.PI)} ${CY} A ${R} ${R} 0 0 1 ${(CX+R*Math.cos(a)).toFixed(2)} ${(CY-R*Math.sin(a)).toFixed(2)}`;};
+$('#cluster').innerHTML=BSC.map(g=>{
+  const f=Math.min(1,g.v/g.max), gf=Math.min(1,g.good/g.max);
+  const col=g.v>=g.good?C.cur:(g.v>=g.good*0.8?C.charge:C.fault);
+  const tx=CX+ (R+6)*Math.cos(Math.PI*(1-gf)), ty=CY-(R+6)*Math.sin(Math.PI*(1-gf));
+  const tx2=CX+(R-7)*Math.cos(Math.PI*(1-gf)), ty2=CY-(R-7)*Math.sin(Math.PI*(1-gf));
+  return `<div class="gauge">
+    <svg viewBox="0 0 100 62" role="img" aria-label="${g.k}: ${g.v}">
+      <path d="M ${arc(1)}" fill="none" stroke="${C.rule}" stroke-width="7" stroke-linecap="round"/>
+      <path d="M ${arc(f)}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round"
+        stroke-dasharray="${LEN}" stroke-dashoffset="${LEN}">
+        <animate attributeName="stroke-dashoffset" from="${LEN}" to="0" dur="0.9s" fill="freeze"/></path>
+      <line x1="${tx.toFixed(1)}" y1="${ty.toFixed(1)}" x2="${tx2.toFixed(1)}" y2="${ty2.toFixed(1)}"
+        stroke="${C.ink}" stroke-width="1.4"/>
+      <text x="50" y="47" text-anchor="middle" font-family="Archivo" font-weight="700" font-size="17"
+        letter-spacing="-0.5" fill="${C.ink}">${g.v.toFixed(2)}</text>
+      <text x="50" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="6.4"
+        fill="#8A939C">${g.note}</text>
+    </svg>
+    <div class="g-l">${g.k}</div>
+    <div class="g-d ${g.d>=0?'up':'down'}">${g.d>=0?'▲':'▼'} ${Math.abs(g.d).toFixed(2)} vs Q2</div>
+  </div>`;}).join('');
+
+/* ---------- KPI row ---------- */
+$('#kpis').innerHTML=[
+ ['Net revenue, Q3','1,603','+1,603 vs Q2'],
+ ['Cash on hand','182','after Q3 close'],
+ ['Market share','19.8%','2nd of 6'],
+ ['Demand served','71%','340 units lost to stock-outs']
+].map(k=>`<div class="kpi"><div class="k-l">${k[0]}</div><div class="k-v">${k[1]}</div>
+  <div class="k-s">${k[2]}</div></div>`).join('');
+$('#spark').innerHTML=[0.61,0.88,0.92].map(v=>`<i style="height:${v/1.1*100}%"></i>`).join('');
+
+/* ---------- market research ---------- */
+const SEGS={
+ 'Urban commuter':{Range:138,'Running cost':131,Comfort:124,'Charging speed':112,Performance:104,
+   'Build & design':101,Safety:98,'Smart tech':92},
+ 'Premium enthusiast':{Performance:151,'Build & design':143,'Smart tech':136,'Charging speed':118,
+   Safety:107,Comfort:99,Range:94,'Running cost':71},
+ 'Value first':{'Running cost':156,Range:118,Safety:103,Comfort:97,'Build & design':88,
+   Performance:84,'Charging speed':82,'Smart tech':66},
+ 'Fleet & delivery':{'Running cost':147,Range:141,'Charging speed':129,Safety:110,Performance:95,
+   Comfort:89,'Build & design':78,'Smart tech':74}
+};
+let seg='Urban commuter';
+$('#segChips').innerHTML=Object.keys(SEGS).map(s=>
+  `<button class="chip" data-seg="${s}" aria-pressed="${s===seg}">${s}</button>`).join('');
+function drawBenefits(){
+  const d=SEGS[seg], mx=170;
+  $('#benefits').innerHTML=Object.entries(d).map(([k,v])=>{
+    const col=v>=125?C.cur:v>=111?C.bench:C.rule;
+    return `<div class="bbar"><span class="bl">${k}</span>
+      <span class="bt"><span class="bf" style="width:${v/mx*100}%;background:${col}"></span>
+      <span class="norm" style="left:${100/mx*100}%"></span></span>
+      <span class="bv">${v}</span></div>`;}).join('');
+}
+drawBenefits();
+$('#segChips').addEventListener('click',e=>{const b=e.target.closest('[data-seg]');if(!b)return;
+  seg=b.dataset.seg;$$('[data-seg]').forEach(x=>x.setAttribute('aria-pressed',x===b));drawBenefits();});
+$('#sample').addEventListener('input',e=>{
+  const n=+e.target.value, err=Math.max(4,Math.round(150/Math.sqrt(n)));
+  $('#sampN').textContent=n.toLocaleString('en-IN');
+  $('#sampE').textContent='±'+err+'%';
+  $('#sampR').textContent=err<=5?'Yes':err<=8?'Mostly':'No, ranks may flip';
+  $('#sampC').textContent='Rs. '+(n*0.012).toFixed(1)+' L';
+});
+
+/* ---------- brand design ---------- */
+const COST={power:[9200,12600,18400,24800],batt:[16000,23500,31000,40500],
+  brake:[1800,3200,5400,8100],build:[6400,9800,15200],wheel:[2400,3900,6200],tech:[0,4100,7300]};
+const cfg={power:1,batt:1,brake:1,build:1,wheel:1,tech:1};
+let addons={'Fast charger':1,'Under-seat storage':1};
+function scoreOf(){ // benefit delivery 0-100 per attribute
+  return {Range:38+cfg.batt*17, Performance:34+cfg.power*16, 'Charging speed':40+cfg.batt*9+(addons['Fast charger']?14:0),
+    Comfort:44+cfg.wheel*11+cfg.build*6, 'Build & design':38+cfg.build*18+cfg.wheel*5,
+    Safety:40+cfg.brake*14, 'Smart tech':30+cfg.tech*24, 'Running cost':92-cfg.power*7-cfg.batt*3};
+}
+function bomOf(){let t=8400;for(const k in cfg)t+=COST[k][cfg[k]];
+  if(addons['Fast charger'])t+=4200;if(addons['Under-seat storage'])t+=1600;
+  if(addons['Crash guard'])t+=1400;if(addons['Pillion backrest'])t+=900;
+  if(addons['Extended warranty'])t+=2600;return t;}
+function drawScooter(){
+  const tone=['#8A939C','#4A5560','#1F2A33'][cfg.build];
+  const acc=['#5B6672',C.cur,'#0FA37F'][cfg.tech];
+  const wheelFill=cfg.wheel===0?'#3A4149':cfg.wheel===1?'#232A31':'#16191D';
+  const spokes=cfg.wheel===0?0:cfg.wheel===1?6:10;
+  const rW=15+cfg.wheel*2.5;
+  const sp=n=>[...Array(n)].map((_,i)=>{const a=i*2*Math.PI/n;
+    return `<line x1="0" y1="0" x2="${((rW-4)*Math.cos(a)).toFixed(1)}" y2="${((rW-4)*Math.sin(a)).toFixed(1)}"
+      stroke="#8A939C" stroke-width="1"/>`;}).join('');
+  $('#scoot').innerHTML=`
+  <rect width="260" height="150" fill="none"/>
+  <path d="M62 96 C78 74 104 68 128 70 L166 72 C182 73 190 82 192 94"
+    fill="none" stroke="${tone}" stroke-width="9" stroke-linecap="round"/>
+  <path d="M120 70 C138 56 158 52 176 54 L182 56" fill="none" stroke="${tone}"
+    stroke-width="7" stroke-linecap="round"/>
+  <path d="M176 54 L190 40 L206 42" fill="none" stroke="#2A3138" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="150" cy="66" rx="26" ry="7" fill="#2A3138"/>
+  <rect x="112" y="76" width="42" height="18" rx="4" fill="${acc}" opacity="0.9"/>
+  <rect x="115" y="79" width="${8+cfg.batt*8}" height="12" rx="2" fill="#fff" opacity="0.85"/>
+  <text x="160" y="89" font-family="JetBrains Mono" font-size="8" fill="#fff">${(2+cfg.batt).toFixed(1)} kWh</text>
+  <g transform="translate(62,110)"><circle r="${rW}" fill="${wheelFill}"/><circle r="${rW-5}" fill="none"
+    stroke="#6C7681" stroke-width="1.5"/>${sp(spokes)}</g>
+  <g transform="translate(192,110)"><circle r="${rW}" fill="${wheelFill}"/><circle r="${rW-5}" fill="none"
+    stroke="#6C7681" stroke-width="1.5"/>${sp(spokes)}</g>
+  ${cfg.brake>=2?'<circle cx="192" cy="110" r="7" fill="none" stroke="#B4322A" stroke-width="2"/>':''}
+  ${cfg.brake>=1?'<circle cx="62" cy="110" r="7" fill="none" stroke="#B4322A" stroke-width="2"/>':''}
+  ${cfg.tech>=1?`<circle cx="186" cy="46" r="4" fill="${C.cur}"/>`:''}
+  ${cfg.power>=2?'<path d="M206 96 l-9 12h6l-4 10 10-13h-6l3-9z" fill="#C88A00"/>':''}
+  <text x="12" y="140" font-family="JetBrains Mono" font-size="8.5" fill="#8A939C">
+    ${['Economy','Balanced','Performance','High performance'][cfg.power]} · ${['Basic','Moulded','Premium'][cfg.build]} build</text>`;
+}
+function recalcBrand(){
+  const bom=bomOf(), unit=bom+8200, price=+$('#price').value||0;
+  const sc=scoreOf(), need=SEGS['Urban commuter'];
+  let num=0,den=0;
+  for(const k in need){num+=need[k]*Math.min(100,sc[k]);den+=need[k]*100;}
+  let judg=Math.round(num/den*100);
+  const ideal=91000, pfit=Math.max(0,1-Math.abs(price-ideal)/ideal*1.6);
+  judg=Math.round(judg*0.78+pfit*22);
+  $('#bom').textContent='Rs. '+bom.toLocaleString('en-IN');
+  $('#ucost').textContent='Rs. '+unit.toLocaleString('en-IN');
+  $('#gm').textContent=price>0?((price-unit)/price*100).toFixed(1)+'%':'—';
+  const load=cfg.power+cfg.batt+cfg.build+cfg.tech;
+  $('#chg').textContent=load<=4?'Low':load<=7?'Moderate':'Heavy';
+  $('#judg').textContent=judg+' / 100';
+  $('#judg').style.color=judg>=75?C.cur:judg>=60?C.charge:C.fault;
+  $('#matchup').innerHTML=Object.entries(need).slice(0,6).map(([k,v])=>{
+    const del=Math.min(100,sc[k]), gap=del-(v-60);
+    const col=gap>=12?C.cur:gap>=0?C.bench:C.fault;
+    return `<div class="bbar" style="grid-template-columns:110px 1fr 40px">
+      <span class="bl" style="font-size:11.5px">${k}</span>
+      <span class="bt" style="height:12px"><span class="bf" style="width:${del}%;background:${col}"></span>
+      <span class="norm" style="left:${v-60}%"></span></span>
+      <span class="bv" style="font-size:10.5px">${del}</span></div>`;}).join('');
+  drawScooter();
+}
+$$('[data-cfg]').forEach(s=>s.addEventListener('change',e=>{
+  cfg[e.target.dataset.cfg]=e.target.selectedIndex;recalcBrand();}));
+$('#price').addEventListener('input',recalcBrand);
+$$('#p-brand .chipset .chip').forEach(c=>{ if(c.disabled||c.dataset.mdl!==undefined)return;
+  c.addEventListener('click',()=>{const on=c.getAttribute('aria-pressed')==='true';
+    c.setAttribute('aria-pressed',!on); if(on)delete addons[c.textContent]; else addons[c.textContent]=1;
+    recalcBrand();});});
+$$('[data-mdl]').forEach(b=>b.addEventListener('click',()=>{
+  $$('[data-mdl]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');$('#mdlName').textContent=b.textContent;}));
+recalcBrand();
+
+/* ---------- advertising ---------- */
+const CLAIMS=['Range','Running cost','Comfort','Charging speed','Performance','Build & design','Safety','Smart tech'];
+let picked=new Set(['Range','Running cost','Comfort']);
+$('#claims').innerHTML=CLAIMS.map(c=>`<button class="chip" data-claim="${c}"
+  aria-pressed="${picked.has(c)}">${c}</button>`).join('');
+function recalcAd(){
+  const need=SEGS['Urban commuter'], sc=scoreOf();
+  let fit=0, truth=true;
+  picked.forEach(c=>{fit+=need[c]||100; if((sc[c]||0)<55)truth=false;});
+  const score=Math.round(Math.min(96,(fit/Math.max(1,picked.size))*0.52)) - (truth?0:18);
+  $('#adFit').textContent=fit/Math.max(1,picked.size)>=125?'Strong':fit/Math.max(1,picked.size)>=108?'Adequate':'Weak';
+  $('#adTruth').textContent=truth?'Yes':'No, deceptive claim risk';
+  $('#adTruth').style.color=truth?C.cur:C.fault;
+  $('#adScore').textContent=Math.max(0,score)+' / 100';
+  $('#adScore').style.color=score>=70?C.cur:score>=55?C.charge:C.fault;
+}
+$('#claims').addEventListener('click',e=>{const b=e.target.closest('[data-claim]');if(!b)return;
+  const c=b.dataset.claim;
+  if(picked.has(c))picked.delete(c); else {if(picked.size>=3)return; picked.add(c);}
+  b.setAttribute('aria-pressed',picked.has(c));recalcAd();});
+recalcAd();
+
+const MEDIA=[['Digital video',18],['Social &amp; influencer',14],['Outdoor',9],['Regional print',5],['Radio',2]];
+$('#media').innerHTML=MEDIA.map((m,i)=>`<div class="field">
+  <label class="fl">${m[0]} <span class="hint" id="mv${i}">Rs. ${m[1]}.0 L</span></label>
+  <input type="range" data-media="${i}" min="0" max="30" value="${m[1]}"></div>`).join('');
+function recalcMedia(){
+  let t=0;$$('[data-media]').forEach((r,i)=>{t+=+r.value;$('#mv'+i).textContent='Rs. '+(+r.value).toFixed(1)+' L';});
+  $('#mediaTot').textContent='Rs. '+t.toFixed(1)+' L';
+  $('#mediaReach').textContent=Math.round(96*(1-Math.exp(-t/42)))+'%';
+  $('#mediaFreq').textContent=(t/15).toFixed(1)+'×';
+}
+$$('[data-media]').forEach(r=>r.addEventListener('input',recalcMedia));
+recalcMedia();
+
+/* ---------- sales channel ---------- */
+const CENTRES=[['Bengaluru South','Open Q2',7,'Urban commuter'],['Pune West','Open Q2',6,'Urban commuter'],
+  ['Hyderabad','Open Q3',5,'Value first'],['Chennai OMR','Open Q3',4,'Not assigned'],
+  ['Delhi NCR','Available',0,'—'],['Ahmedabad','Available',0,'—']];
+$('#centres').innerHTML=CENTRES.map(c=>{const live=c[1]!=='Available';
+  return `<div class="deck" style="${live?'':'opacity:.62;border-style:dashed'}">
+    <svg viewBox="0 0 60 40" style="width:52px;height:35px;display:block;margin-bottom:8px">
+      <path d="M6 16 L30 5 L54 16 L54 36 L6 36 Z" fill="${live?'#DFEEEA':'#F2F4F3'}"
+        stroke="${live?C.cur:C.rule}" stroke-width="1.5"/>
+      <rect x="24" y="24" width="12" height="12" fill="${live?C.cur:C.rule}"/>
+      <rect x="12" y="21" width="8" height="7" fill="${live?C.cur:C.rule}" opacity=".45"/>
+      <rect x="40" y="21" width="8" height="7" fill="${live?C.cur:C.rule}" opacity=".45"/></svg>
+    <div class="dn">${c[0]}</div><div class="dm">${c[1]}</div>
+    ${live?`<div class="rline" style="padding:3px 0"><span class="l">Staff</span><span class="v">${c[2]}</span></div>
+      <div class="rline" style="padding:3px 0;border:none"><span class="l">Training</span>
+      <span class="v" style="font-size:10.5px">${c[3]}</span></div>`
+      :`<button class="btn g sm" style="width:100%">Open · Rs. 40 L</button>`}</div>`;}).join('');
+
+/* ---------- HR ---------- */
+const HRF=[['Quarterly salary','Rs. lakh',4.2,2.5,7,0.1],['Health cover','level',2,0,3,1],
+  ['Annual leave','days',14,6,26,1],['Pension contribution','% of salary',7,0,14,0.5]];
+function hrPanel(id,base){
+  $(id).innerHTML=HRF.map((f,i)=>`<div class="field">
+    <label class="fl">${f[0]} <span class="hint" id="${id.slice(1)}v${i}">${f[2]} ${f[1]}</span></label>
+    <input type="range" data-hr="${id.slice(1)}|${i}" min="${f[3]}" max="${f[4]}" step="${f[5]}" value="${f[2]}"></div>`).join('')
+    +`<div class="readout"><div class="rline"><span class="l">Package vs industry median</span>
+      <span class="v" id="${id.slice(1)}rel">+6%</span></div>
+      <div class="rline"><span class="l">Quarterly cost</span><span class="v" id="${id.slice(1)}cost">Rs. ${base} L</span></div>
+      <div class="rline big"><span class="l">Projected productivity</span>
+      <span class="v" id="${id.slice(1)}prod">86 / 100</span></div></div>`;
+}
+hrPanel('#hrSales',92); hrPanel('#hrPlant',158);
+const HEADS={hrSales:22,hrPlant:48}, MED=[4.05,2,15,7];
+function recalcHR(p){
+  const vals=$$(`[data-hr^="${p}|"]`).map(r=>+r.value);
+  vals.forEach((v,i)=>$(`#${p}v${i}`).textContent=v+' '+HRF[i][1]);
+  let rel=0; vals.forEach((v,i)=>rel+=(v-MED[i])/Math.max(0.5,MED[i]));
+  rel=rel/4;
+  const cost=Math.round(HEADS[p]*(vals[0]*(1+vals[3]/100)+vals[1]*0.28+vals[2]*0.035));
+  $(`#${p}rel`).textContent=(rel>=0?'+':'')+(rel*100).toFixed(0)+'%';
+  $(`#${p}rel`).style.color=rel>=0?C.cur:C.fault;
+  $(`#${p}cost`).textContent='Rs. '+cost+' L';
+  const prod=Math.round(Math.max(35,Math.min(99,74+rel*90)));
+  $(`#${p}prod`).textContent=prod+' / 100';
+  $(`#${p}prod`).style.color=prod>=80?C.cur:prod>=65?C.charge:C.fault;
+}
+$$('[data-hr]').forEach(r=>r.addEventListener('input',e=>recalcHR(e.target.dataset.hr.split('|')[0])));
+recalcHR('hrSales'); recalcHR('hrPlant');
+
+/* ---------- manufacturing ---------- */
+function recalcMfg(){
+  const blocks=+$('#capBlocks').value||1, fixed=blocks*500;
+  const opPct=+$('#opCap').value, sched=Math.round(fixed*opPct/100);
+  const chgLoss=Math.round(sched*0.066), out=sched-chgLoss;
+  const demand=2260, so=Math.max(0,demand-out), excess=Math.max(0,out-demand);
+  const q=+$('#qspend').value||0, rel=Math.round(100-50*Math.exp(-(90+q)/150));
+  $('#capUnits').textContent=fixed.toLocaleString('en-IN')+' units';
+  $('#mOut').textContent=out.toLocaleString('en-IN');
+  $('#mChg').textContent=chgLoss.toLocaleString('en-IN');
+  $('#mExc').textContent='Rs. '+Math.round(excess*0.09)+' L';
+  $('#mSo').textContent=so.toLocaleString('en-IN');
+  $('#mSo').style.color=so>0?C.fault:C.cur;
+  $('#mRel').textContent=rel+' / 100';
+  $('#mRel').style.color=rel>=80?C.cur:rel>=65?C.charge:C.fault;
+  const util=Math.min(1,out/Math.max(1,sched));
+  const r=76,cx=120,cy=104,a=Math.PI*(1-util);
+  const p=(f)=>{const t=Math.PI*(1-f);return `M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${(cx+r*Math.cos(t)).toFixed(1)} ${(cy-r*Math.sin(t)).toFixed(1)}`;};
+  $('#util').innerHTML=`<path d="${p(1)}" fill="none" stroke="${C.rule}" stroke-width="14" stroke-linecap="round"/>
+    <path d="${p(util)}" fill="none" stroke="${util>=0.9?C.cur:util>=0.75?C.charge:C.fault}"
+      stroke-width="14" stroke-linecap="round"/>
+    <text x="120" y="98" text-anchor="middle" font-family="Archivo" font-weight="700" font-size="30"
+      letter-spacing="-1" fill="${C.ink}">${Math.round(util*100)}%</text>
+    <text x="120" y="118" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#5B6672">
+      of scheduled capacity used</text>`;
+}
+['#capBlocks','#opCap','#qspend'].forEach(s=>$(s).addEventListener('input',()=>{recalcMfg();drawQual();}));
+recalcMfg();
+
+/* ---------- in-store tactics ---------- */
+function recalcPop(){
+  const i=$('#pop').selectedIndex, cost=[0,2,7,16][i]*4, lift=[0,2.1,6.5,11.8][i];
+  $('#popCost').textContent='Rs. '+cost+' L';
+  $('#popLift').textContent='+'+lift.toFixed(1)+' pts';
+  const reb=+$('#rebate').value||0;
+  $('#rebCost').textContent='Rs. '+Math.round(reb*2260/100000)+' L';
+}
+['#pop','#rebate','#prio'].forEach(s=>$(s).addEventListener('input',recalcPop));
+recalcPop();
+
+/* ---------- web sales centre ---------- */
+function recalcWeb(){
+  const open=$('#webOn').selectedIndex===1;
+  const staff=+$('#webStaff').value||0, spend=+$('#webSpend').value||0;
+  const tac=$$('#webTac .chip').filter(c=>c.getAttribute('aria-pressed')==='true').length;
+  const vis=open?Math.round(3200+spend*1180+tac*640):0;
+  const conv=open?Math.min(6.4,1.1+tac*0.45+Math.min(1.4,staff*0.22)):0;
+  const units=Math.round(vis*conv/100);
+  const cost=open?(55*0+spend*100000+staff*350000):0;
+  $('#webVis').textContent=vis.toLocaleString('en-IN');
+  $('#webConv').textContent=conv.toFixed(1)+'%';
+  $('#webUnits').textContent=units.toLocaleString('en-IN');
+  $('#webCPU').textContent=units?'Rs. '+Math.round(cost/units).toLocaleString('en-IN'):'—';
+  const sat=open?Math.round(Math.min(96,46+tac*7+Math.min(18,staff*3.4))):0;
+  $('#webSat').textContent=sat+' / 100';
+  $('#webSat').style.color=sat>=75?C.cur:sat>=58?C.charge:C.fault;
+}
+$('#webTac').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
+  b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true');recalcWeb();});
+['#webOn','#webStaff','#webSpend'].forEach(s=>$(s).addEventListener('input',recalcWeb));
+recalcWeb();
+
+/* ---------- production schedule ---------- */
+const SCHED=[['Surge 110',1580,296,520,240],['Surge Lite',680,142,260,110]];
+const RULES=['Make to target point','Level production','Chase demand','Build to stock ceiling'];
+$('#schedBody').innerHTML=SCHED.map((s,i)=>{
+  const sched=Math.max(0,s[1]+s[3]-s[2]);
+  return `<tr><td>${s[0]}</td><td>${s[1].toLocaleString('en-IN')}</td><td>${s[2]}</td>
+    <td>${s[3]}</td><td>${s[4]}</td>
+    <td style="text-align:left"><select data-rule="${i}" style="font-size:11.5px;padding:4px 6px">
+      ${RULES.map((r,j)=>`<option${j===0?' selected':''}>${r}</option>`).join('')}</select></td>
+    <td data-sched="${i}">${sched.toLocaleString('en-IN')}</td>
+    <td>${s[3]}</td></tr>`;}).join('');
+$('#simBtn').addEventListener('click',()=>{
+  const o=$('#simOut');
+  o.textContent='Simulated. 14 changeovers across 62 production days, 146 units lost. '+
+    'Running Surge Lite in two blocks instead of four would recover 51 of them.';
+  o.style.color=C.cur;});
+
+/* ---------- quality by component ---------- */
+const QUAL=[['Battery pack and BMS',3.4,18],['Motor and controller',2.1,11],
+  ['Braking assembly',1.2,5],['Frame and panels',0.8,3],['Telematics unit',2.9,4]];
+function drawQual(){
+  const total=+$('#qspend').value||0;
+  const share=QUAL.map(q=>q[2]);
+  const sum=share.reduce((a,b)=>a+b,0);
+  let newRate=0,wsum=0;
+  $('#qualBody').innerHTML=QUAL.map((q,i)=>{
+    const sp=total*share[i]/sum;
+    const nr=q[1]*Math.exp(-sp/28);
+    newRate+=nr*share[i]; wsum+=share[i];
+    return `<tr><td>${q[0]}</td><td>${q[1].toFixed(1)}%</td><td>Rs. ${q[2]} L</td>
+      <td>Rs. ${sp.toFixed(1)} L</td>
+      <td style="color:${nr<q[1]*0.85?C.cur:'#5B6672'}">${nr.toFixed(2)}%</td></tr>`;}).join('');
+  $('#qWar').textContent='Rs. '+sum+' L';
+  $('#qSpend').textContent='Rs. '+total+' L';
+  $('#qNew').textContent=(newRate/wsum).toFixed(2)+'%';
+}
+
+drawQual();
+
+/* ---------- changeover ---------- */
+function recalcChg(){
+  const rd=+$('#chgRD').value||0, cum=rd;
+  const eff=Math.min(94,62+rd*0.55);
+  $('#chgEff').textContent=eff.toFixed(0)+'%';
+  $('#chgLost').textContent=(6.6*(62/eff)).toFixed(1)+'%';
+  $('#chgCum').textContent='Rs. '+cum+' L';
+  $('#chgRec').textContent=Math.round((6.6-6.6*(62/eff))/100*2200)+'';
+}
+$('#chgRD').addEventListener('input',recalcChg);
+recalcChg();
+
+/* ---------- finance tabs ---------- */
+$$('[data-ft]').forEach(t=>t.addEventListener('click',()=>{
+  $$('[data-ft]').forEach(x=>x.setAttribute('aria-selected','false'));
+  t.setAttribute('aria-selected','true');
+  ['pl','cf','bs','abc','fund'].forEach(k=>$('#ft-'+k).style.display=k===t.dataset.ft?'':'none');
+}));
+
+/* ---------- venture round ---------- */
+const BP=[
+ ['ok','Goals: marketing, financial and ownership','Three-year unit and share targets stated with a stock-out ceiling'],
+ ['ok','Marketing strategy','Urban commuter primary, fleet secondary from Q7'],
+ ['ok','Manufacturing strategy','Capacity to 3,500 units by Q6, changeover R&amp;D from Q5'],
+ ['ok','Financial strategy','Debt held under 30% of capital, no dividend before Q8'],
+ ['warn','Pro forma statements, Q5 to Q12','Cash flow is complete, balance sheet projection is not'],
+ ['err','Tactical plan for Q5','Not started. The partners read this before the numbers.']
+];
+$('#bpList').innerHTML=BP.map(b=>`<div class="chk ${b[0]}">
+  <span class="ic">${b[0]==='ok'?'✓':b[0]==='warn'?'!':'✕'}</span>
+  <span class="tx"><b>${b[1]}</b><span>${b[2]}</span></span></div>`).join('');
+$('#bpNote').textContent=BP.filter(b=>b[0]==='ok').length+' of '+BP.length+' sections complete';
+
+const PARTNERS=[
+ {n:'Meera Raghavan',f:'Growth and market evidence',w:'share'},
+ {n:'Anand Pillai',f:'Unit economics and cash discipline',w:'cash'},
+ {n:'Sophie Lang',f:'Valuation and dilution',w:'val'}
+];
+const FAIR=618, EXEC_SHARES=400000;
+function recalcVC(){
+  const amt=+$('#vcAmt').value, sh=+$('#vcShares').value;
+  const price=amt*100000/sh;
+  const pre=EXEC_SHARES*price/100000, post=pre+amt;
+  const retain=EXEC_SHARES/(EXEC_SHARES+sh)*100;
+  $('#vcAmtV').textContent='Rs. '+amt+' L';
+  $('#vcShV').textContent=sh.toLocaleString('en-IN');
+  $('#vcPrice').textContent='Rs. '+price.toFixed(2);
+  $('#vcPre').textContent='Rs. '+pre.toFixed(0)+' L';
+  $('#vcPost').textContent='Rs. '+post.toFixed(0)+' L';
+  $('#vcRetain').textContent=retain.toFixed(1)+'%';
+  $('#vcFair').textContent='Rs. '+FAIR+' L';
+
+  const overpriced=pre/FAIR;               // >1 means asking above independent valuation
+  const bpDone=BP.filter(b=>b[0]==='ok').length/BP.length;
+  const scores={
+    share:Math.round(Math.min(96,58+bpDone*22+(amt>=250?12:amt/25))),
+    cash:Math.round(Math.min(96,44+bpDone*30+(amt>=280?18:amt/16))),
+    val:Math.round(Math.max(8,Math.min(96,98-Math.max(0,(overpriced-0.95))*185)))
+  };
+  $('#vcPanel').innerHTML=PARTNERS.map(p=>{
+    const s=scores[p.w], col=s>=70?C.cur:s>=52?C.charge:C.fault;
+    const view=p.w==='val'
+      ? (overpriced>1.18?'The ask prices you well above what the trading record supports.'
+        : overpriced>1.02?'Slightly rich, but arguable on the Q3 momentum.'
+        : 'Priced sensibly against the evidence.')
+      : p.w==='cash'
+      ? (amt<220?'This does not fund the capacity you say you need.'
+        : amt>430?'More cash than the plan absorbs. Discipline concern.'
+        : 'Sized to the manufacturing plan.')
+      : (bpDone>0.83?'The plan reads as a decision, not a hope.'
+        : 'The tactical plan is missing. Come back with it.');
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--rule-soft)">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+        <div><b style="font-family:var(--d);font-size:13.5px">${p.n}</b>
+          <div style="font-family:var(--m);font-size:10px;color:var(--slate-2)">${p.f}</div></div>
+        <span style="font-family:var(--d);font-weight:700;font-size:19px;color:${col}">${s}</span></div>
+      <div style="height:5px;background:var(--paper);border-radius:3px;margin:7px 0 6px">
+        <div style="height:100%;width:${s}%;background:${col};border-radius:3px;transition:width .3s"></div></div>
+      <div style="font-family:var(--s);font-size:13.5px;color:var(--slate)">${view}</div></div>`;
+  }).join('');
+
+  const avg=(scores.share+scores.cash+scores.val)/3;
+  const v=$('#vcVerdict');
+  if(BP.some(b=>b[0]==='err')){v.textContent='Plan incomplete';v.style.color=C.fault;
+    $('#vcTerm').innerHTML=`<div class="chk err"><span class="ic">✕</span><span class="tx">
+      <b>Cannot present yet</b><span>Finish the tactical plan before the Q5 deadline.</span></span></div>`;return;}
+  if(avg>=72){v.textContent='Term sheet offered';v.style.color=C.cur;
+    $('#vcTerm').innerHTML=`<div class="chk ok"><span class="ic">✓</span><span class="tx">
+      <b>Full amount at your price</b><span>Rs. ${amt} L for ${sh.toLocaleString('en-IN')} shares.</span></span></div>`;}
+  else if(avg>=54){const cut=Math.round(amt*0.72);v.textContent='Counter-offer';v.style.color=C.charge;
+    $('#vcTerm').innerHTML=`<div class="chk warn"><span class="ic">!</span><span class="tx">
+      <b>Rs. ${cut} L at a lower price</b><span>Same share count, ${(100-avg).toFixed(0)}% below your ask.
+      Accept, or re-price and present again.</span></span></div>`;}
+  else{v.textContent='Declined';v.style.color=C.fault;
+    $('#vcTerm').innerHTML=`<div class="chk err"><span class="ic">✕</span><span class="tx">
+      <b>No offer</b><span>Trade another quarter on the bank line and return in Q6.</span></span></div>`;}
+}
+['#vcAmt','#vcShares'].forEach(s=>$(s).addEventListener('input',recalcVC));
+recalcVC();
+
+/* ---------- auditor ---------- */
+const AUDIT=[
+ ['err','✕','Projected cash goes negative','Closing cash is Rs. (17) L. Cut Rs. 17 L of spend or draw on the bank line.'],
+ ['warn','!','Chennai OMR has no segment training','Conversion is 17% against 31% at trained centres.'],
+ ['warn','!','Prices unchanged since Q3','Elasticity estimate suggests a 4% cut lifts demand 11%.'],
+ ['ok','✓','Ad claims deliverable','No deceptive-advertising exposure.'],
+ ['ok','✓','Capacity covers forecast','Scheduled output meets Q4 forecast demand.'],
+ ['ok','✓','Compensation above industry median','Sales +6%, plant +4%.'],
+ ['ok','✓','Debt within limits','Bank line drawn 180 of 246.']
+];
+$('#auditList').innerHTML=AUDIT.map(a=>`<div class="chk ${a[0]}"><span class="ic">${a[1]}</span>
+  <span class="tx"><b>${a[2]}</b><span>${a[3]}</span></span></div>`).join('');
+const fatal=AUDIT.some(a=>a[0]==='err');
+if(fatal){const b=$('#lockBtn');b.disabled=true;b.textContent='1 fault blocks lock-in';}
+</script>
+</body>
+</html>

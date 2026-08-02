@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EV Venture League · Instructor Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --graphite:#16191D; --slate:#5B6672; --slate-2:#8A939C;
+  --paper:#EEF1F0; --card:#FFFFFF; --rule:#D8DEDC; --rule-soft:#E9EDEC;
+  --current:#0F6E5C; --current-tint:#DFEEEA; --current-deep:#0A4E42;
+  --charge:#C88A00; --charge-tint:#FAF0DA;
+  --fault:#B4322A; --fault-tint:#F8E6E4;
+  --bench:#2E5D8C; --bench-tint:#E2EAF2;
+  --d:'Archivo',sans-serif; --b:'Public Sans',sans-serif;
+  --s:'Source Serif 4',Georgia,serif; --m:'JetBrains Mono',monospace;
+  --rail:236px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--graphite);font-family:var(--b);font-size:13.5px;line-height:1.5;
+  font-feature-settings:"tnum" 0}
+:focus-visible{outline:2px solid var(--current);outline-offset:2px;border-radius:3px}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:40;background:var(--graphite);color:#fff;
+  display:flex;align-items:stretch;height:54px;border-bottom:1px solid #000}
+.brand{display:flex;align-items:center;gap:11px;padding:0 18px;width:var(--rail);
+  border-right:1px solid #2B3037;flex-shrink:0}
+.mark{width:26px;height:26px;flex-shrink:0}
+.brand-txt .n{font-family:var(--d);font-weight:700;font-size:14px;letter-spacing:-.015em;line-height:1.1}
+.brand-txt .s{font-family:var(--m);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#7E8892}
+.topbar-main{flex:1;display:flex;align-items:center;justify-content:space-between;
+  gap:16px;padding:0 18px;min-width:0}
+.firmline{display:flex;align-items:baseline;gap:10px;min-width:0}
+.firmline .fn{font-family:var(--d);font-weight:600;font-size:15px;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.firmline .fu{font-family:var(--m);font-size:10.5px;color:#7E8892;white-space:nowrap}
+.topmeta{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.qtr{font-family:var(--m);font-size:11px;letter-spacing:.06em;background:#242A31;
+  border:1px solid #363E47;border-radius:5px;padding:5px 11px;white-space:nowrap}
+.qtr b{color:#fff;font-weight:700}
+.clock{font-family:var(--m);font-size:11px;color:var(--charge);white-space:nowrap}
+.clock::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--charge);margin-right:7px;vertical-align:1px;animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.lockbtn{font-family:var(--d);font-weight:600;font-size:12.5px;background:var(--current);
+  color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;transition:background .15s}
+.lockbtn:hover{background:#12836E}
+.lockbtn[disabled]{background:#3A4149;color:#7E8892;cursor:not-allowed}
+
+/* ---------- shell ---------- */
+.shell{display:flex;align-items:flex-start;min-height:calc(100vh - 54px)}
+.rail{width:var(--rail);flex-shrink:0;background:var(--card);border-right:1px solid var(--rule);
+  position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;padding:14px 0 40px}
+.rail-grp{padding:0 14px;margin-bottom:6px}
+.rail-grp-h{font-family:var(--m);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--slate-2);padding:14px 8px 7px}
+.navitem{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;
+  border:none;border-radius:6px;padding:8px 9px;cursor:pointer;font-family:var(--b);font-size:13px;
+  color:var(--graphite);transition:background .12s}
+.navitem:hover{background:var(--paper)}
+.navitem[aria-current="true"]{background:var(--current-tint);color:var(--current-deep);font-weight:600}
+.navitem[aria-current="true"] .seq{background:var(--current);color:#fff;border-color:var(--current)}
+.seq{font-family:var(--m);font-size:9.5px;width:19px;height:19px;flex-shrink:0;
+  display:grid;place-items:center;border:1px solid var(--rule);border-radius:4px;color:var(--slate)}
+.navitem .flag{margin-left:auto;font-family:var(--m);font-size:9px;padding:2px 6px;border-radius:99px}
+.flag.open{background:var(--charge-tint);color:var(--charge)}
+.flag.err{background:var(--fault-tint);color:var(--fault)}
+.flag.done{background:var(--current-tint);color:var(--current-deep)}
+
+.main{flex:1;min-width:0;padding:22px 26px 90px;max-width:1180px}
+.audit{width:270px;flex-shrink:0;position:sticky;top:54px;height:calc(100vh - 54px);
+  overflow-y:auto;padding:22px 20px 60px;border-left:1px solid var(--rule);background:var(--card)}
+@media(max-width:1400px){.audit{display:none}}
+@media(max-width:980px){
+  .rail{position:fixed;left:0;top:54px;transform:translateX(-100%);transition:transform .2s;z-index:35;
+    box-shadow:0 0 0 100vmax rgba(0,0,0,0)}
+  .rail.open{transform:none;box-shadow:2px 0 24px rgba(0,0,0,.18)}
+  .brand{width:auto;border-right:none}
+  .main{padding:18px 16px 80px}
+  .railtoggle{display:grid!important}
+}
+.railtoggle{display:none;place-items:center;width:34px;height:34px;background:#242A31;
+  border:1px solid #363E47;border-radius:6px;color:#fff;cursor:pointer;flex-shrink:0}
+
+/* ---------- page furniture ---------- */
+.pagehead{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:var(--m);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--current)}
+.pagehead h1{font-family:var(--d);font-weight:700;font-size:25px;letter-spacing:-.022em;margin-top:5px}
+.lede{font-family:var(--s);font-size:15px;line-height:1.55;color:var(--slate);max-width:62ch;margin-top:7px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:9px;margin-bottom:16px}
+.card-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:12px 16px;border-bottom:1px solid var(--rule-soft)}
+.card-h h2{font-family:var(--d);font-weight:600;font-size:14.5px;letter-spacing:-.01em}
+.card-h .note{font-family:var(--m);font-size:10.5px;color:var(--slate-2)}
+.card-b{padding:16px}
+.card-b.flush{padding:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+
+/* ---------- instrument cluster (signature) ---------- */
+.cluster{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule-soft)}
+@media(max-width:700px){.cluster{grid-template-columns:repeat(2,1fr)}}
+.gauge{background:var(--card);padding:14px 12px 12px;text-align:center}
+.gauge svg{width:100%;max-width:132px;height:auto;display:block;margin:0 auto}
+.gauge .g-l{font-family:var(--m);font-size:9px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--slate);margin-top:2px;min-height:24px;display:flex;align-items:center;justify-content:center}
+.gauge .g-v{font-family:var(--d);font-weight:700;font-size:21px;letter-spacing:-.02em;line-height:1}
+.gauge .g-t{font-family:var(--m);font-size:9.5px;color:var(--slate-2);margin-top:3px}
+.gauge .g-d{font-family:var(--m);font-size:9.5px;font-weight:500;margin-top:5px}
+.up{color:var(--current)} .down{color:var(--fault)}
+
+/* ---------- KPIs ---------- */
+.kpirow{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule-soft)}
+@media(max-width:760px){.kpirow{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);padding:14px 16px}
+.kpi .k-l{font-family:var(--m);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+.kpi .k-v{font-family:var(--d);font-weight:700;font-size:24px;letter-spacing:-.025em;margin-top:4px;
+  font-variant-numeric:tabular-nums}
+.kpi .k-s{font-family:var(--m);font-size:10.5px;color:var(--slate-2);margin-top:3px}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{font-family:var(--m);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--slate);text-align:right;padding:9px 12px;border-bottom:1px solid var(--rule);
+  background:#FAFBFB;font-weight:500;white-space:nowrap}
+thead th:first-child,tbody td:first-child{text-align:left}
+tbody td{padding:8px 12px;border-bottom:1px solid var(--rule-soft);text-align:right;
+  font-family:var(--m);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody td:first-child{font-family:var(--b);font-weight:500;font-size:12.5px;white-space:normal}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.sub td:first-child{padding-left:26px;font-weight:400;color:var(--slate)}
+tbody tr.rule td{border-top:1px solid var(--graphite);font-weight:700}
+tbody tr.rule td:first-child{font-weight:700}
+tbody tr.hi{background:var(--current-tint)}
+.tscroll{overflow-x:auto}
+.us{color:var(--current-deep);font-weight:700}
+
+/* ---------- forms ---------- */
+.field{margin-bottom:13px}
+label.fl{display:block;font-family:var(--m);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--slate);margin-bottom:5px}
+label.fl .hint{text-transform:none;letter-spacing:0;color:var(--slate-2);font-size:10px;margin-left:6px}
+select,input[type=text],input[type=number],textarea{width:100%;font-family:var(--b);font-size:13px;
+  border:1px solid var(--rule);border-radius:6px;padding:8px 10px;background:#fff;color:var(--graphite)}
+input[type=number]{font-family:var(--m);font-variant-numeric:tabular-nums}
+select:hover,input:hover{border-color:var(--slate-2)}
+input[type=range]{width:100%;accent-color:var(--current)}
+.inline{display:flex;gap:10px;align-items:center}
+.chipset{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--b);font-size:12px;border:1px solid var(--rule);background:#fff;border-radius:99px;
+  padding:6px 13px;cursor:pointer;transition:all .12s;color:var(--slate)}
+.chip:hover{border-color:var(--current)}
+.chip[aria-pressed="true"]{background:var(--current);border-color:var(--current);color:#fff;font-weight:600}
+.chip[disabled]{opacity:.4;cursor:not-allowed}
+.btn{font-family:var(--d);font-weight:600;font-size:12.5px;background:var(--graphite);color:#fff;
+  border:none;border-radius:6px;padding:9px 16px;cursor:pointer;transition:background .15s}
+.btn:hover{background:#000}
+.btn.g{background:#fff;color:var(--graphite);border:1px solid var(--rule)}
+.btn.g:hover{background:var(--paper);border-color:var(--slate-2)}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+
+/* ---------- readout ---------- */
+.readout{background:#FAFBFB;border:1px solid var(--rule-soft);border-radius:8px;padding:13px}
+.rline{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:5px 0;
+  border-bottom:1px dotted var(--rule)}
+.rline:last-child{border-bottom:none}
+.rline .l{font-size:12px;color:var(--slate)}
+.rline .v{font-family:var(--m);font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums}
+.rline.big .v{font-family:var(--d);font-size:16px;font-weight:700}
+
+/* ---------- benefit bars (market research) ---------- */
+.bbar{display:grid;grid-template-columns:150px 1fr 44px;align-items:center;gap:11px;padding:4px 0}
+.bbar .bl{font-size:12.5px}
+.bbar .bt{height:16px;background:var(--paper);border-radius:3px;position:relative;overflow:hidden}
+.bbar .bf{position:absolute;left:0;top:0;bottom:0;border-radius:3px;transition:width .4s}
+.bbar .norm{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--graphite);opacity:.45}
+.bbar .bv{font-family:var(--m);font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- audit rail ---------- */
+.audit h3{font-family:var(--d);font-weight:700;font-size:13px;letter-spacing:-.01em;margin-bottom:3px}
+.audit .sub{font-family:var(--m);font-size:10px;color:var(--slate-2);margin-bottom:14px}
+.chk{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--rule-soft);font-size:12px;line-height:1.4}
+.chk .ic{flex-shrink:0;width:15px;height:15px;border-radius:50%;display:grid;place-items:center;
+  font-size:9px;font-weight:700;color:#fff;margin-top:1px;font-family:var(--m)}
+.chk.ok .ic{background:var(--current)} .chk.warn .ic{background:var(--charge)}
+.chk.err .ic{background:var(--fault)}
+.chk .tx b{display:block;font-family:var(--b);font-weight:600;font-size:12px}
+.chk .tx span{color:var(--slate);font-size:11.5px}
+.spend{margin-top:18px;padding-top:14px;border-top:1px solid var(--rule)}
+
+/* ---------- narrative / briefing ---------- */
+.brief{font-family:var(--s);font-size:15px;line-height:1.62;color:#2A3138;max-width:64ch}
+.brief p+p{margin-top:11px}
+.brief .drop::first-letter{font-family:var(--d);font-weight:700;font-size:44px;float:left;
+  line-height:.82;margin:4px 9px 0 0;color:var(--current)}
+.pull{font-family:var(--s);font-style:italic;font-size:15.5px;color:var(--current-deep);
+  border-left:2px solid var(--current);padding-left:14px;margin:14px 0}
+
+/* ---------- misc ---------- */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule);margin-bottom:16px;overflow-x:auto}
+.tab{font-family:var(--b);font-size:13px;background:none;border:none;border-bottom:2px solid transparent;
+  padding:9px 14px;cursor:pointer;color:var(--slate);white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--graphite);font-weight:600;border-bottom-color:var(--current)}
+.page{display:none} .page.on{display:block}
+.badge{font-family:var(--m);font-size:10px;padding:3px 8px;border-radius:99px}
+.badge.ok{background:var(--current-tint);color:var(--current-deep)}
+.badge.b{background:var(--bench-tint);color:var(--bench)}
+.badge.w{background:var(--charge-tint);color:var(--charge)}
+.sparkwrap{display:flex;align-items:flex-end;gap:3px;height:38px}
+.sparkwrap i{flex:1;background:var(--current);opacity:.28;border-radius:2px 2px 0 0;transition:opacity .15s}
+.sparkwrap i:last-child{opacity:1}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--m);font-size:10px;color:var(--slate)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0}
+.scoot{width:100%;height:auto;display:block}
+.deckgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.deck{border:1px solid var(--rule);border-radius:8px;padding:12px;background:#fff}
+.deck .dn{font-family:var(--d);font-weight:600;font-size:13.5px}
+.deck .dm{font-family:var(--m);font-size:10.5px;color:var(--slate-2);margin-bottom:8px}
+</style>
+
+<style>
+.gaterow{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--rule-soft);
+  border:1px solid var(--rule-soft);border-radius:8px;overflow:hidden}
+@media(max-width:860px){.gaterow{grid-template-columns:repeat(3,1fr)}}
+.gatecell{background:#fff;padding:13px 10px;text-align:center;border-top:3px solid var(--rule)}
+.gatecell.ok{border-top-color:var(--current);background:var(--current-tint)}
+.gatecell.warn{border-top-color:var(--charge);background:var(--charge-tint)}
+.gatecell.err{border-top-color:var(--fault);background:var(--fault-tint)}
+.gatecell .gn{display:block;font-family:var(--d);font-weight:600;font-size:12.5px;line-height:1.2}
+.gatecell .gs{display:block;font-family:var(--m);font-size:9.5px;color:var(--slate);margin-top:5px}
+.firmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.firmcard{border:1px solid var(--rule);border-radius:9px;padding:13px;background:#fff}
+.fc-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.fc-n{font-family:var(--d);font-weight:600;font-size:14px}
+.fc-m{font-family:var(--m);font-size:10px;color:var(--slate-2);margin:4px 0 10px}
+.fc-s{display:flex;align-items:flex-end;gap:3px;height:34px;margin-bottom:9px;
+  padding-bottom:2px;border-bottom:1px solid var(--rule-soft)}
+.fc-s i{flex:1;background:var(--current);opacity:.55;border-radius:2px 2px 0 0;min-height:2px}
+.up{color:var(--current)} .down{color:var(--fault)}
+</style>
+
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <button class="railtoggle" id="railToggle" aria-label="Show sections">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M2 4h12M2 8h12M2 12h12"/></svg>
+    </button>
+    <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <rect x="1" y="1" width="30" height="30" rx="7" stroke="#3A424B" stroke-width="1.5"/>
+      <path d="M17.6 6 9 17.4h5.4L13.4 26 22 14.6h-5.4L17.6 6Z" fill="#C88A00"/>
+      <path d="M17.6 6 9 17.4h5.4" stroke="#F0C755" stroke-width="1.1" stroke-linejoin="round"/>
+    </svg>
+    <div class="brand-txt">
+      <div class="n">EV Venture League</div>
+      <div class="s">Instructor</div>
+    </div>
+  </div>
+  <div class="topbar-main">
+    <div class="firmline">
+      <span class="fn">MBA 2026 · Section B</span>
+      <span class="fu">UNI-7742 · join code VOLT-8831 · 6 firms · 31 students</span>
+    </div>
+    <div class="topmeta">
+      <span class="qtr">Quarter <b>4</b> · decisions open</span>
+      <span class="clock" id="clock">Closes in 41:12</span>
+      <button class="lockbtn" id="runBtn" disabled>4 of 6 locked</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="Instructor sections">
+    <div class="rail-grp">
+      <div class="rail-grp-h">This universe</div>
+      <button class="navitem" data-p="floor" aria-current="true"><span class="seq">01</span>Trading floor</button>
+      <button class="navitem" data-p="mentor"><span class="seq">02</span>Mentoring<span class="flag open">3 live</span></button>
+      <button class="navitem" data-p="results"><span class="seq">03</span>Results &amp; scorecard</button>
+      <button class="navitem" data-p="roster"><span class="seq">04</span>Roster</button>
+      <button class="navitem" data-p="setup"><span class="seq">05</span>Setup &amp; export</button>
+    </div>
+    <div class="rail-grp">
+      <div class="rail-grp-h">Platform admin</div>
+      <button class="navitem" data-p="universes"><span class="seq">06</span>All universes</button>
+      <button class="navitem" data-p="accounts"><span class="seq">07</span>All accounts</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <!-- 01 TRADING FLOOR -->
+    <section class="page on" id="p-floor">
+      <div class="pagehead">
+        <div class="eyebrow">Quarter 4 of 8 · festive quarter, demand ×1.25</div>
+        <h1>Trading floor</h1>
+        <p class="lede">Live state of every firm. A firm that is editing but has not committed shows as
+          drafting, so you can see who is stuck without opening their workspace.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Run gate</h2><span class="note">All firms locked, or force the run</span></div>
+        <div class="card-b">
+          <div class="gate" id="gate"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px">
+            <button class="btn" id="runBtn2" disabled>Run quarter 4</button>
+            <button class="btn g" id="forceBtn">Force run at deadline</button>
+            <button class="btn g" id="extendBtn">Extend deadline 30 min</button>
+            <span class="note" id="gateNote" style="font-family:var(--m);font-size:11px;color:var(--slate)">
+              Torque Labs and Sable EV have not locked. Forcing the run submits their last saved draft.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Firms</h2><span class="note">Refreshes every 7 seconds</span></div>
+        <div class="card-b"><div class="firmgrid" id="firmGrid"></div></div>
+      </div>
+    </section>
+
+    <!-- 02 MENTORING -->
+    <section class="page" id="p-mentor">
+      <div class="pagehead">
+        <div class="eyebrow">Read only · teams never see each other's workspace</div>
+        <h1>Mentoring</h1>
+        <p class="lede">What Torque Labs has on screen right now, drawn from their draft. Use it to
+          coach mid-quarter instead of waiting for results to explain the mistake for you.</p>
+      </div>
+      <div class="card">
+        <div class="card-h">
+          <h2 id="mFirm">Torque Labs</h2>
+          <div class="chipset" id="mPick"></div>
+        </div>
+        <div class="card-b">
+          <div class="g3">
+            <div class="readout"><div class="rline"><span class="l">State</span>
+              <span class="v" style="color:var(--charge)">Drafting live</span></div>
+              <div class="rline"><span class="l">Last edit</span><span class="v">14 s ago</span></div>
+              <div class="rline"><span class="l">Editing now</span><span class="v" style="font-size:11px">R. Menon</span></div>
+              <div class="rline"><span class="l">Members</span><span class="v">5</span></div></div>
+            <div class="readout"><div class="rline"><span class="l">Primary segment</span>
+              <span class="v" style="font-size:11px">Fleet &amp; delivery</span></div>
+              <div class="rline"><span class="l">Models</span><span class="v">1</span></div>
+              <div class="rline"><span class="l">Centres</span><span class="v">3</span></div>
+              <div class="rline"><span class="l">Sales staff</span><span class="v">18</span></div></div>
+            <div class="readout"><div class="rline"><span class="l">Cash on hand</span><span class="v">Rs. 61 L</span></div>
+              <div class="rline"><span class="l">Committed in draft</span><span class="v">Rs. 214 L</span></div>
+              <div class="rline"><span class="l">Projected close</span>
+                <span class="v" style="color:var(--fault)">Rs. (153) L</span></div>
+              <div class="rline"><span class="l">Bank headroom</span><span class="v">Rs. 88 L</span></div></div>
+          </div>
+
+          <div style="margin-top:16px" class="g2">
+            <div>
+              <label class="fl">Coaching signals</label>
+              <div class="chk err"><span class="ic">✕</span><span class="tx"><b>Insolvent on current draft</b>
+                <span>They are Rs. 65 L past the emergency loan threshold and have not noticed.</span></span></div>
+              <div class="chk warn"><span class="ic">!</span><span class="tx"><b>Single model, single segment</b>
+                <span>No secondary segment means market performance is capped at half.</span></span></div>
+              <div class="chk warn"><span class="ic">!</span><span class="tx"><b>Ad claims mismatched</b>
+                <span>Claiming performance to a segment that rated running cost 147.</span></span></div>
+              <div class="chk ok"><span class="ic">✓</span><span class="tx"><b>Capacity sized correctly</b>
+                <span>Scheduled output covers their own forecast.</span></span></div>
+            </div>
+            <div>
+              <label class="fl">Draft decisions, Q4</label>
+              <div class="tscroll"><table>
+                <thead><tr><th>Area</th><th>Q3</th><th>Q4 draft</th><th>Δ</th></tr></thead>
+                <tbody>
+                  <tr><td>Price, Haul 90</td><td>74,000</td><td>71,500</td><td class="down">-3.4%</td></tr>
+                  <tr><td>Ad spend</td><td>22</td><td>39</td><td class="up">+77%</td></tr>
+                  <tr><td>Sales staff</td><td>18</td><td>24</td><td class="up">+6</td></tr>
+                  <tr><td>New centre</td><td>0</td><td>1</td><td class="up">Kochi</td></tr>
+                  <tr><td>Capacity blocks</td><td>3</td><td>4</td><td class="up">+500 u</td></tr>
+                  <tr><td>Quality spend</td><td>10</td><td>0</td><td class="down">-10</td></tr>
+                </tbody></table></div>
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn g sm">Send a nudge to this team</button>
+            <button class="btn g sm">Unlock their submission</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 RESULTS -->
+    <section class="page" id="p-results">
+      <div class="pagehead">
+        <div class="eyebrow">Published to every screen after each run</div>
+        <h1>Results and scorecard</h1>
+        <p class="lede">Cumulative balanced scorecard is the grading spine. The nine components are shown
+          so a student can argue about which one they traded away, and why.</p>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Leaderboard after Q3</h2><span class="note">Cumulative balanced scorecard</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Firm</th><th>Cum.</th><th>Fin perf</th><th>Fin risk</th><th>Market</th>
+            <th>Mktg eff</th><th>Future</th><th>Wealth</th><th>Assets</th><th>HR</th><th>Mfg</th></tr></thead>
+          <tbody id="lbBody"></tbody></table></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>Market report, Q3</h2><span class="note">Public to all firms</span></div>
+          <div class="card-b flush tscroll"><table>
+            <thead><tr><th>Segment</th><th>Demand</th><th>Served</th><th>Leader</th><th>Leader share</th></tr></thead>
+            <tbody>
+              <tr><td>Urban commuter</td><td>9,410</td><td>8,180</td><td>Volt Dynamics</td><td>31.2%</td></tr>
+              <tr><td>Premium enthusiast</td><td>3,090</td><td>3,090</td><td>Ampere Mobility</td><td>58.7%</td></tr>
+              <tr><td>Value first</td><td>7,760</td><td>6,940</td><td>Cirrus Electric</td><td>34.1%</td></tr>
+              <tr><td>Fleet &amp; delivery</td><td>4,720</td><td>3,510</td><td>Torque Labs</td><td>41.9%</td></tr>
+              <tr class="rule"><td>Total</td><td>24,980</td><td>21,720</td><td>Unserved</td><td>13.1%</td></tr>
+            </tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Quarter history</h2><span class="note">Reproducible from the decision log</span></div>
+          <div class="card-b flush tscroll"><table>
+            <thead><tr><th>Quarter</th><th>Run at</th><th>Engine</th><th>Forced</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Q3</td><td>18 Jul, 16:04</td><td>v2.3.1</td><td>No</td><td><button class="btn g sm">Replay</button></td></tr>
+              <tr><td>Q2</td><td>11 Jul, 16:02</td><td>v2.3.1</td><td>Yes</td><td><button class="btn g sm">Replay</button></td></tr>
+              <tr><td>Q1</td><td>04 Jul, 15:58</td><td>v2.3.0</td><td>No</td><td><button class="btn g sm">Replay</button></td></tr>
+            </tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 ROSTER -->
+    <section class="page" id="p-roster">
+      <div class="pagehead">
+        <div class="eyebrow">31 students across 6 firms</div>
+        <h1>Roster</h1>
+        <p class="lede">Fix duplicate joins and wrong-slot joins here. Removing a member does not touch
+          their account or their membership in any other universe.</p>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Members by firm</h2>
+          <div style="display:flex;gap:8px"><button class="btn g sm">Add a bot firm</button>
+          <button class="btn g sm">Print roster</button></div></div>
+        <div class="card-b" id="roster"></div>
+      </div>
+    </section>
+
+    <!-- 05 SETUP -->
+    <section class="page" id="p-setup">
+      <div class="pagehead">
+        <div class="eyebrow">Locked once quarter 1 has run</div>
+        <h1>Setup and export</h1>
+        <p class="lede">Market size is the lever that decides whether a segment is defensible. Scale it
+          with the number of human firms, not with the number of students.</p>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>Universe parameters</h2><span class="note">Engine v2.3.1, pinned</span></div>
+          <div class="card-b">
+            <div class="field"><label class="fl">Section name</label>
+              <input type="text" value="MBA 2026 · Section B"></div>
+            <div class="g2" style="gap:12px">
+              <div class="field"><label class="fl">Quarters</label>
+                <select><option>8, compact exercise</option><option selected>12, term long</option>
+                <option>20, two-term league</option></select></div>
+              <div class="field"><label class="fl">Human firms</label>
+                <select><option>4</option><option>5</option><option selected>6</option><option>8</option>
+                <option>10</option></select></div>
+            </div>
+            <div class="field"><label class="fl">Market size <span class="hint">units per quarter</span></label>
+              <input type="range" id="tam" min="8000" max="45000" step="1000" value="25000"></div>
+            <div class="readout">
+              <div class="rline"><span class="l">Total addressable market</span><span class="v" id="tamV">25,000 u</span></div>
+              <div class="rline"><span class="l">Even share per firm</span><span class="v" id="tamShare">4,167 u</span></div>
+              <div class="rline"><span class="l">Defensible niche exists?</span><span class="v" id="tamOk">Yes</span></div>
+              <div class="rline big"><span class="l">Competitive pressure</span><span class="v" id="tamP">Balanced</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Export</h2><span class="note">For grading and research</span></div>
+          <div class="card-b">
+            <p style="font-family:var(--s);font-size:14.5px;color:var(--slate);margin-bottom:14px">
+              The export is the complete decision log, not a summary. Every submitted decision, every
+              quarter's results, and the balanced scorecard breakdown per firm, in a shape that loads
+              straight into R.</p>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn g" style="text-align:left">Decision log · long format CSV</button>
+              <button class="btn g" style="text-align:left">Results and scorecard · CSV</button>
+              <button class="btn g" style="text-align:left">Full universe · JSON</button>
+              <button class="btn g" style="text-align:left">Gradebook · CSV for the LMS</button>
+            </div>
+            <div class="readout" style="margin-top:14px">
+              <div class="rline"><span class="l">Decision rows to date</span><span class="v">1,842</span></div>
+              <div class="rline"><span class="l">Engine version pinned</span><span class="v">v2.3.1</span></div>
+              <div class="rline"><span class="l">Replayable</span><span class="v" style="color:var(--current)">Yes, all quarters</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 ALL UNIVERSES -->
+    <section class="page" id="p-universes">
+      <div class="pagehead">
+        <div class="eyebrow">Platform admin</div>
+        <h1>All universes</h1>
+        <p class="lede">Every universe on this deployment, whoever created it. Opening one gives you the
+          instructor console without taking ownership away from the person running it.</p>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Universes</h2><span class="note">7 total · 3 running</span></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Universe</th><th>Owner</th><th>Firms</th><th>Quarter</th><th>Status</th>
+            <th>Engine</th><th>Actions</th></tr></thead>
+          <tbody id="uniBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- 07 ALL ACCOUNTS -->
+    <section class="page" id="p-accounts">
+      <div class="pagehead">
+        <div class="eyebrow">Platform admin</div>
+        <h1>All accounts</h1>
+        <p class="lede">There is no self-service password reset by design, so this is the recovery path.
+          Generate a temporary password and hand it over directly.</p>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Accounts</h2>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" placeholder="Search name or email" style="width:210px;padding:6px 10px">
+            <button class="btn sm">Create account</button></div></div>
+        <div class="card-b flush tscroll"><table>
+          <thead><tr><th>Person</th><th>Email</th><th>Role</th><th>Universes</th><th>Last seen</th>
+            <th>Actions</th></tr></thead>
+          <tbody id="acctBody"></tbody></table></div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="audit" aria-label="Session state">
+    <h3>Session state</h3>
+    <div class="sub">UNI-7742 · Q4 open</div>
+    <div id="stateList"></div>
+    <div class="spend">
+      <div class="rline"><span class="l">Students online</span><span class="v">23 of 31</span></div>
+      <div class="rline"><span class="l">Drafts saved, last 5 min</span><span class="v">147</span></div>
+      <div class="rline big"><span class="l">Firms locked</span><span class="v">4 of 6</span></div>
+      <button class="btn g sm" style="width:100%;margin-top:12px">Project the join code</button>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const C={cur:'#0F6E5C',bench:'#2E5D8C',charge:'#C88A00',fault:'#B4322A',rule:'#D8DEDC',ink:'#16191D'};
+
+$$('.navitem').forEach(b=>b.addEventListener('click',()=>{
+  $$('.navitem').forEach(x=>x.setAttribute('aria-current','false'));
+  b.setAttribute('aria-current','true');
+  $$('.page').forEach(p=>p.classList.remove('on'));
+  $('#p-'+b.dataset.p).classList.add('on');
+  $('#rail').classList.remove('open'); window.scrollTo({top:0});
+}));
+$('#railToggle').addEventListener('click',()=>$('#rail').classList.toggle('open'));
+
+let secs=41*60+12;
+setInterval(()=>{if(secs<=0)return;secs--;const m=String(Math.floor(secs/60)).padStart(2,'0'),
+  s=String(secs%60).padStart(2,'0');$('#clock').textContent=`Closes in ${m}:${s}`;},1000);
+
+/* ---------- firms ---------- */
+const FIRMS=[
+ {n:'Ampere Mobility',st:'locked',mem:6,ed:'',cum:2.71,cash:214,seg:'Premium enthusiast',
+  sc:[1.08,0.88,0.42,0.86,3.9,1.12,2.4,0.91,0.79]},
+ {n:'Volt Dynamics',st:'locked',mem:5,ed:'',cum:2.41,cash:182,seg:'Urban commuter',
+  sc:[0.94,0.83,0.31,0.72,3.42,0.78,1.91,0.87,0.66]},
+ {n:'Nirvaha Motors',st:'locked',mem:6,ed:'',cum:2.28,cash:143,seg:'Urban commuter',
+  sc:[0.81,0.79,0.28,0.79,3.1,0.71,1.74,0.85,0.71]},
+ {n:'Cirrus Electric',st:'locked',mem:5,ed:'',cum:2.04,cash:96,seg:'Value first',
+  sc:[0.72,0.74,0.26,0.61,2.8,0.64,2.02,0.68,0.62]},
+ {n:'Torque Labs',st:'draft',mem:5,ed:'R. Menon',cum:1.66,cash:61,seg:'Fleet & delivery',
+  sc:[0.51,0.68,0.22,0.58,2.4,0.44,1.48,0.76,0.58]},
+ {n:'Sable EV',st:'idle',mem:0,ed:'',cum:1.31,cash:74,seg:'Value first',bot:true,
+  sc:[0.42,0.71,0.16,0.52,2.1,0.39,1.36,0.61,0.55]}
+];
+const STLBL={locked:['Locked','ok'],draft:['Drafting live','warn'],idle:['Not started','err']};
+$('#gate').innerHTML=`<div class="gaterow">`+FIRMS.map(f=>{
+  const [lbl,cls]=STLBL[f.st];
+  return `<div class="gatecell ${cls}"><span class="gn">${f.n}</span>
+    <span class="gs">${f.bot?'Bot, auto-locks':lbl}</span></div>`;}).join('')+`</div>`;
+
+$('#firmGrid').innerHTML=FIRMS.map(f=>{
+  const [lbl,cls]=STLBL[f.st];
+  const badge=cls==='ok'?'ok':cls==='warn'?'w':'b';
+  return `<div class="firmcard">
+    <div class="fc-h"><span class="fc-n">${f.n}${f.bot?' <span class="badge b">bot</span>':''}</span>
+      <span class="badge ${badge}">${f.bot?'auto':lbl}</span></div>
+    <div class="fc-m">${f.seg} · ${f.mem} member${f.mem===1?'':'s'}${f.ed?' · '+f.ed+' editing':''}</div>
+    <div class="fc-s">${f.sc.map((v,i)=>{
+      const norm=[2,1,1,1,6,2,4,1,1][i];
+      return `<i style="height:${Math.min(100,v/norm*100)}%" title="${v}"></i>`;}).join('')}</div>
+    <div class="rline" style="padding:4px 0"><span class="l">Cumulative BSC</span>
+      <span class="v">${f.cum.toFixed(2)}</span></div>
+    <div class="rline" style="padding:4px 0;border:none"><span class="l">Cash</span>
+      <span class="v">Rs. ${f.cash} L</span></div>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button class="btn g sm" style="flex:1">Workspace</button>
+      ${f.st==='locked'?'<button class="btn g sm" style="flex:1">Unlock</button>':''}
+    </div></div>`;}).join('');
+
+const lockedN=FIRMS.filter(f=>f.st==='locked'||f.bot).length;
+if(lockedN>=FIRMS.length){['#runBtn','#runBtn2'].forEach(s=>{$(s).disabled=false;});}
+$('#forceBtn').addEventListener('click',()=>{
+  $('#gateNote').textContent='Force run armed. It will submit the last saved draft for any firm still open.';
+  $('#runBtn2').disabled=false; $('#runBtn').disabled=false; $('#runBtn').textContent='Force run quarter 4';});
+$('#extendBtn').addEventListener('click',()=>{secs+=1800;});
+
+/* ---------- mentoring picker ---------- */
+$('#mPick').innerHTML=FIRMS.map((f,i)=>`<button class="chip" data-f="${i}"
+  aria-pressed="${f.n==='Torque Labs'}">${f.n}</button>`).join('');
+$('#mPick').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;
+  $$('[data-f]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');$('#mFirm').textContent=b.textContent;});
+
+/* ---------- leaderboard ---------- */
+$('#lbBody').innerHTML=FIRMS.slice().sort((a,b)=>b.cum-a.cum).map(f=>{
+  const norm=[2,1,1,1,6,2,4,1,1], good=[1,0.8,0.4,0.8,3,1,3,0.8,0.8];
+  return `<tr${f.n==='Volt Dynamics'?' class="hi"':''}><td>${f.n}</td>
+    <td style="font-weight:700">${f.cum.toFixed(2)}</td>`+
+    f.sc.map((v,i)=>`<td style="color:${v>=good[i]?C.cur:v>=good[i]*0.8?C.charge:C.fault}">${v.toFixed(2)}</td>`).join('')
+    +`</tr>`;}).join('');
+
+/* ---------- roster ---------- */
+const NAMES=[['Ampere Mobility',['A. Sharma','P. Nair','K. Reddy','M. Iyer','S. Bose','D. Kulkarni']],
+ ['Volt Dynamics',['R. Krishnan','T. Fernandes','V. Joshi','N. Agarwal','L. Mathew']],
+ ['Nirvaha Motors',['H. Patel','G. Rao','J. Thomas','B. Sinha','C. Verma','A. Das']],
+ ['Cirrus Electric',['S. Pillai','U. Chandra','F. Qureshi','E. Dutta','O. Banerjee']],
+ ['Torque Labs',['R. Menon','Y. Gupta','I. Shetty','W. Ahmed','Z. Kaur']],
+ ['Sable EV',[]]];
+$('#roster').innerHTML=NAMES.map(([firm,mem])=>`
+  <div style="border:1px solid var(--rule-soft);border-radius:8px;padding:12px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px">
+      <b style="font-family:var(--d);font-size:14px">${firm}</b>
+      <span class="note" style="font-family:var(--m);font-size:10.5px;color:var(--slate-2)">
+        ${mem.length} of 6 slots</span></div>
+    ${mem.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">`+mem.map(m=>
+      `<span class="chip" style="cursor:default;font-size:11.5px;padding:4px 10px">${m}
+       <button class="btn g sm" style="padding:0 5px;margin-left:5px;font-size:10px"
+         aria-label="Remove ${m}">remove</button></span>`).join('')+`</div>`
+      :`<span class="note" style="font-family:var(--s);color:var(--slate)">Bot firm, no members. Acts as a benchmark rival.</span>`}
+  </div>`).join('');
+
+/* ---------- setup sliders ---------- */
+$('#tam').addEventListener('input',e=>{
+  const t=+e.target.value, per=Math.round(t/6);
+  $('#tamV').textContent=t.toLocaleString('en-IN')+' u';
+  $('#tamShare').textContent=per.toLocaleString('en-IN')+' u';
+  const ok=per>=2600;
+  $('#tamOk').textContent=ok?'Yes':'Too thin at 6 firms';
+  $('#tamOk').style.color=ok?C.cur:C.fault;
+  const p=per<2600?'Brutal, firms will fail':per<4600?'Balanced':per<6500?'Comfortable':'Too easy, no real rivalry';
+  $('#tamP').textContent=p;
+  $('#tamP').style.color=per<2600||per>=6500?C.charge:C.cur;
+});
+
+/* ---------- admin tables ---------- */
+const UNIS=[
+ ['MBA 2026 · Section B','K. K. Dinesh',6,'Q4 of 12','Running','v2.3.1',true],
+ ['MBA 2026 · Section A','K. K. Dinesh',6,'Q4 of 12','Running','v2.3.1',false],
+ ['B.Tech minor · DIE','S. Raju',4,'Q7 of 8','Running','v2.3.0',false],
+ ['FDP demo, Apr 2026','K. K. Dinesh',3,'Q8 of 8','Complete','v2.2.4',false],
+ ['Exec MDP pilot','A. Dua',5,'Q0 of 8','Not started','v2.3.1',false],
+ ['Sandbox','K. K. Dinesh',2,'Q2 of 8','Idle 34 d','v2.2.4',false],
+ ['MBA 2025 · Section A','K. K. Dinesh',6,'Q12 of 12','Archived','v2.1.8',false]
+];
+$('#uniBody').innerHTML=UNIS.map(u=>{
+  const cls=u[4]==='Running'?'ok':u[4]==='Complete'?'b':'w';
+  return `<tr${u[6]?' class="hi"':''}><td>${u[0]}${u[6]?' <span class="badge ok">current</span>':''}</td>
+  <td style="font-family:var(--b);font-size:12px">${u[1]}</td><td>${u[2]}</td><td>${u[3]}</td>
+  <td><span class="badge ${cls}">${u[4]}</span></td><td>${u[5]}</td>
+  <td><button class="btn g sm">Open</button> <button class="btn g sm">Reassign</button></td></tr>`;}).join('');
+
+const ACCTS=[
+ ['K. K. Dinesh','kkdinesh@nitw.ac.in','Platform admin',6,'Now',true],
+ ['S. Raju','sarin@nitw.ac.in','Instructor',1,'2 h ago',false],
+ ['A. Dua','amandua@nitw.ac.in','Instructor',1,'Yesterday',false],
+ ['R. Menon','rmenon@student.nitw.ac.in','Student',1,'Now',false],
+ ['A. Sharma','asharma@student.nitw.ac.in','Student',1,'4 min ago',false],
+ ['T. Fernandes','tfern@student.nitw.ac.in','Student',2,'11 min ago',false],
+ ['Y. Gupta','ygupta@student.nitw.ac.in','Student',1,'6 d ago',false]
+];
+$('#acctBody').innerHTML=ACCTS.map(a=>{
+  const cls=a[2]==='Platform admin'?'w':a[2]==='Instructor'?'b':'ok';
+  return `<tr${a[5]?' class="hi"':''}><td>${a[0]}</td>
+  <td style="font-size:11px">${a[1]}</td><td><span class="badge ${cls}">${a[2]}</span></td>
+  <td>${a[3]}</td><td>${a[4]}</td>
+  <td><button class="btn g sm">Reset password</button>
+  ${a[5]?'':' <button class="btn g sm">Grant admin</button>'}</td></tr>`;}).join('');
+
+/* ---------- session state rail ---------- */
+$('#stateList').innerHTML=[
+ ['ok','✓','4 firms locked','Ampere, Volt, Nirvaha, Cirrus committed.'],
+ ['warn','!','Torque Labs drafting','R. Menon editing, projected cash is negative.'],
+ ['err','✕','Sable EV not started','Bot firm, will auto-lock at the deadline.'],
+ ['ok','✓','No engine faults','Last run completed in 1.9 s.'],
+ ['ok','✓','Decision log intact','1,842 rows, all quarters replayable.']
+].map(a=>`<div class="chk ${a[0]}"><span class="ic">${a[1]}</span>
+  <span class="tx"><b>${a[2]}</b><span>${a[3]}</span></span></div>`).join('');
+</script>
+</body>
+
+</html>
